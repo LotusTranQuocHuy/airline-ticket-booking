@@ -47,5 +47,7 @@ Hoặc mở `AirlineBooking.sln` bằng Visual Studio, chọn `AirlineBooking.Wi
 
 | Thành viên | Phụ trách |
 |---|---|
-| A | Domain & Rules: `Fares/`, `Booking`, hủy vé / hoàn tiền |
-| B | Infrastructure & Flow: `Seat` (khóa ghế), `Flight`, `FlightCatalog`, `BookingService`, giao diện |
+| Trần Quốc Huy | Class diagram, kế hoạch, giao diện & chức năng Admin (tạo vé, quản lý vé, báo cáo doanh thu) |
+| Ngô Thành Đạt | Hiện thực code từ class diagram, giao diện & chức năng Người dùng (tìm chuyến, chọn ghế, đặt / hủy vé) |
+
+Kế hoạch chi tiết: [docs/PLAN.md](docs/PLAN.md)

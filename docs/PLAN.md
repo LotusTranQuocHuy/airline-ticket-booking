@@ -1,93 +1,117 @@
-# Kế hoạch 3 tuần — Airline Ticket Booking System (C# / .NET 8 / WinForms, nhóm 2 người A & B)
+# Kế hoạch 4 tuần — Airline Ticket Booking System (C# / .NET 8 / WinForms)
 
-## Context
-Đề bài OOP cuối kỳ: hệ thống đặt vé máy bay (tìm chuyến, chọn/khóa ghế theo hạng, hủy vé & hoàn tiền). Chấm theo "Design quality": trách nhiệm class rõ ràng (không God class), dùng đúng Polymorphism / Encapsulation / Composition, và extensibility. Nhóm quen C# → chọn **C# + .NET 8 + WinForms + xUnit**. Tuần 3 ưu tiên **thêm hạng ghế mới (PremiumEconomy/First) mà không sửa class cũ**. Thư mục làm bài: `D:\OOP_Final`.
+**Thành viên**
 
-## Cấu trúc solution (chốt ngay đầu tuần 1)
-
-```
-AirlineBooking.sln
-├── AirlineBooking.Core        (class library — KHÔNG tham chiếu WinForms)
-│   ├── Models/      Flight, Seat, Passenger, Booking, BookingStatus, SeatStatus
-│   ├── Fares/       ISeatClass, SeatClassBase (abstract), EconomyClass, BusinessClass
-│   │                (tuần 3: PremiumEconomyClass, FirstClass)
-│   ├── Services/    FlightCatalog (search), BookingService (điều phối đặt/hủy)
-│   └── Exceptions/  SeatUnavailableException, InvalidBookingStateException, FlightNotFoundException
-├── AirlineBooking.WinForms    (tham chiếu Core; form chỉ bắt sự kiện → gọi service → hiển thị)
-│   ├── SearchForm, SeatMapForm, MyBookingsForm
-│   └── Program.cs (khởi tạo dữ liệu mẫu + service, truyền vào form)
-└── AirlineBooking.Tests       (xUnit, chỉ test Core)
-```
-
-Quy tắc vàng: **không có logic nghiệp vụ trong `*_Click`**. Form chỉ gọi `BookingService`/`FlightCatalog` và bắt exception để hiện `MessageBox`.
-
-## Thiết kế lõi
-
-- **Polymorphism** — `ISeatClass`: `decimal CalculateFare(decimal baseFare)`, `decimal CancellationFeeRate(TimeSpan timeBeforeDeparture)`, `string Name`, `Color DisplayColor`(tùy chọn, hoặc map ở UI). `SeatClassBase` (abstract) giữ cách tra bảng mốc phí chung; subclass chỉ khai báo hệ số giá + bảng mốc → không lặp logic. Refund = giá − phí tính **một chỗ** trong `Booking.Cancel()`.
-- **Encapsulation** — `Seat` có `Status { get; private set; }`, chỉ đổi qua `TryLock(holder)`, `Confirm(holder)`, `Release()`. `Booking` là nơi duy nhất điều khiển chuỗi lock → confirm và kiểm tra chuyển trạng thái hợp lệ (`Confirmed → Cancelled`, cấm hủy 2 lần, cấm hủy sau giờ bay).
-- **Composition** — `Flight` tự tạo và sở hữu `IReadOnlyList<Seat>` (ghế không tồn tại ngoài chuyến bay); `Booking` tham chiếu `Seat` cụ thể + `Passenger` + `Flight`.
-- **Search** — `FlightCatalog.Search(origin, destination, DateOnly date)` bằng LINQ.
-- **Thời gian** — inject `TimeProvider` (.NET 8) vào `BookingService`; test dùng `FakeTimeProvider` (`Microsoft.Extensions.TimeProvider.Testing`) để giả lập hủy trước 48h / 24h / 2h.
-- **Tiền** — dùng `decimal`, không dùng `double`.
-- **Race condition** — check-then-act (`if (seat.IsAvailable) seat.Book()`) giữa 2 thread. Giảm thiểu: `lock (_sync)` trong `Seat.TryLock()` hoặc `Interlocked.CompareExchange` trên trạng thái; lock giữ ghế có hạn. Báo cáo bàn thêm mức DB: optimistic concurrency (`rowversion`) / `UPDATE ... WHERE Status = 'Available'`.
-
-## Phân công
-- **A — Domain & Rules**: `Fares/`, `Booking`, cancellation/refund, test polymorphism, form `MyBookingsForm` (hủy vé).
-- **B — Infrastructure & Flow**: `Seat` (locking), `Flight`, `FlightCatalog`, `BookingService`, solution/build, test validation + concurrency, `SearchForm` + `SeatMapForm`.
-- Cả hai: viết báo cáo phần của mình; **AI Usage Log ghi ngay mỗi lần dùng AI** (ngày, công cụ, prompt, phần dùng/không dùng, đã sửa gì).
-
-## Tuần 1 — Thiết kế + Core chạy được
-| Việc | Người |
+| Thành viên | Vai trò chính |
 |---|---|
-| Đọc README gốc + rubric, viết Problem restatement (½ trang) | A |
-| Class diagram v1 (PlantUML / Mermaid / Visual Studio Class Diagram), cùng chốt | A + B |
-| Tạo solution 3 project, Git, `dotnet build` / `dotnet test` chạy được, README build/run | B |
-| `ISeatClass`, `SeatClassBase`, `EconomyClass`, `BusinessClass` + bảng phí hủy | A |
-| `Seat` (state + TryLock/Confirm/Release), `Flight` (tạo ghế), `Passenger` | B |
-| `FlightCatalog.Search` + dữ liệu mẫu (`SampleData`) | B |
-| Unit test cơ bản cho fare & seat | A / B |
+| Trần Quốc Huy | Thiết kế (class diagram, kế hoạch), giao diện & chức năng **Admin** |
+| Ngô Thành Đạt | Hiện thực code từ class diagram, giao diện & chức năng **Người dùng** |
 
-**Mốc cuối tuần 1:** `dotnet test` xanh, search chạy, giá khác nhau theo hạng.
+## Bối cảnh
+Đề bài OOP cuối kỳ: hệ thống đặt vé máy bay — tìm chuyến bay, chọn/khóa ghế theo hạng (Economy, Business, ...), hủy vé và hoàn tiền theo hạng ghế và thời gian còn lại trước giờ bay. Chấm theo "Design quality": trách nhiệm class rõ ràng (không God class), dùng đúng Polymorphism / Encapsulation / Composition, và khả năng mở rộng.
 
-## Tuần 2 — Đủ yêu cầu bắt buộc + GUI cơ bản + báo cáo nháp
-| Việc | Người |
+Nguyên tắc xuyên suốt: **Form không chứa logic nghiệp vụ**. Mọi form chỉ bắt sự kiện → gọi service trong `AirlineBooking.Core` → hiển thị kết quả / bắt exception để hiện `MessageBox`.
+
+---
+
+## Tuần 1 — Thiết kế & khung code
+
+| Người | Công việc | Kết quả |
+|---|---|---|
+| Trần Quốc Huy | Thiết kế class diagram (Enterprise Architect) | `docs/class-diagram.jpg`, `docs/AirlineBooking.eap`, `docs/class-diagram.md` |
+| Trần Quốc Huy | Lập kế hoạch nội dung thực hiện trong 4 tuần | `docs/PLAN.md` |
+| Ngô Thành Đạt | Export class diagram sang code C# (solution `AirlineBooking.Core` + `AirlineBooking.WinForms`), build thành công | Code khung trên GitHub |
+
+---
+
+## Tuần 2 — Thiết kế giao diện (WinForms)
+
+### Màn hình chung: Đăng nhập — `FrmLogin`
+- Form đơn giản có **ảnh nền** và tên ứng dụng.
+- Hai nút lựa chọn: **Admin** và **Người dùng**.
+- Chọn **Người dùng** → hiện ô nhập **Họ tên** (và Email, có thể bỏ trống) → bấm **Vào** để tạo `Passenger` cho phiên làm việc. Cần tên để vé gắn với đúng hành khách, giúp Admin quản lý vé và thống kê doanh thu theo khách.
+- Chọn **Admin** → vào thẳng màn hình quản trị (không cần mật khẩu, theo phạm vi bài).
+
+### Giao diện Admin — Trần Quốc Huy
+
+| Form | Nội dung | Control chính |
+|---|---|---|
+| `FrmAdminMain` | Màn hình chính của Admin, menu chuyển sang các chức năng bên dưới, nút Đăng xuất | `MenuStrip` / các nút lớn |
+| `FrmFlightManager` | **Tạo vé**: danh sách chuyến bay; thêm chuyến mới (số hiệu, điểm đi, điểm đến, giờ bay, giá gốc, số hàng ghế mỗi hạng) → hệ thống sinh sơ đồ ghế | `DataGridView`, `TextBox`, `ComboBox`, `DateTimePicker`, `NumericUpDown` |
+| `FrmFlightEdit` | Chỉnh sửa thông tin chuyến bay (giờ bay, giá gốc), xem sơ đồ ghế của chuyến | `DateTimePicker`, `NumericUpDown`, lưới nút ghế (chỉ xem) |
+| `FrmBookingManager` | **Quản lý vé**: danh sách tất cả vé, lọc theo chuyến bay / trạng thái / tên khách; xem chi tiết; hủy vé thay khách (hiện số tiền hoàn) | `DataGridView`, `ComboBox` lọc, `TextBox` tìm kiếm |
+| `FrmRevenueReport` | **Báo cáo doanh thu**: tổng tiền đã thu, tổng tiền đã hoàn, doanh thu thực; thống kê theo chuyến bay và theo hạng ghế; lọc theo khoảng ngày | `DateTimePicker` (từ–đến), `DataGridView`, `Label` tổng, `Chart` (tuỳ chọn) |
+
+### Giao diện Người dùng — Ngô Thành Đạt
+
+| Form | Nội dung | Control chính |
+|---|---|---|
+| `FrmUserMain` | Màn hình chính, hiện "Xin chào, <tên>", menu sang các chức năng bên dưới, nút Đăng xuất | `Label`, các nút |
+| `FrmSearchFlight` | **Tìm chuyến**: chọn điểm đi, điểm đến, ngày bay → danh sách chuyến phù hợp; chọn một chuyến để sang chọn ghế | `ComboBox`, `DateTimePicker`, `DataGridView` |
+| `FrmSeatMap` | **Chọn ghế**: lưới nút ghế theo hàng/cột, mỗi hạng một màu, ghế đã đặt bị khóa (xám); chú thích màu; hiện giá khi chọn ghế | `FlowLayoutPanel` / `TableLayoutPanel` chứa `Button` tạo động |
+| `FrmBookingConfirm` | **Xác nhận đặt vé**: thông tin chuyến, ghế, hạng, giá → bấm Đặt vé | `Label`, nút Xác nhận / Hủy |
+| `FrmMyBookings` | **Vé của tôi**: danh sách vé của hành khách; chọn vé → Hủy → hộp thoại hiện phí hủy và số tiền được hoàn | `DataGridView`, `MessageBox` |
+
+### Tuần 2 — Kết quả cần có
+- Tất cả form trên đã có bố cục, điều hướng qua lại được (chưa cần dữ liệu thật — có thể dùng dữ liệu mẫu).
+- Ảnh chụp từng màn hình để đưa vào báo cáo.
+
+---
+
+## Tuần 3 — Hoàn thành chức năng theo giao diện
+
+Mục tiêu: sau tuần 3, các màn hình của tuần 2 **hoạt động thật** — bấm nút là đặt được vé, hủy được vé, xem được doanh thu — chứ không chỉ là bố cục.
+
+Ứng dụng gồm hai phần:
+- **Phần xử lý** (project `AirlineBooking.Core`): nơi chứa toàn bộ quy tắc của hệ thống — tính giá vé theo hạng ghế, kiểm tra ghế còn trống, tính phí hủy và tiền hoàn. Phần này không biết gì về giao diện.
+- **Phần giao diện** (project `AirlineBooking.WinForms`): các màn hình đã thiết kế ở tuần 2. Giao diện chỉ nhận thao tác của người dùng, gọi sang phần xử lý, rồi hiển thị kết quả.
+
+Tách như vậy để quy tắc nghiệp vụ chỉ nằm ở một chỗ, dễ kiểm thử và dễ thay giao diện khác mà không phải viết lại.
+
+### Ngô Thành Đạt — chức năng phía Người dùng
+
+| Việc cần làm | Giải thích |
 |---|---|
-| `Booking` (state machine), `BookingService.Book/Cancel` | A: Booking, B: Service |
-| Cancellation flow: refund theo hạng × thời gian còn lại (`TimeProvider`) | A |
-| Exceptions + validation (ghế đã đặt, hủy 2 lần, chuyến không tồn tại, hủy sau giờ bay) | B |
-| **Test bắt buộc (xUnit):** (1) happy path search → book → cancel → refund; (2) double-booking bị từ chối + hủy 2 lần bị từ chối; (3) cùng kịch bản hủy, Economy vs Business → refund khác nhau (`[Theory]` + `[InlineData]`) | A: (3), B: (1)(2) |
-| `SearchForm` (ComboBox origin/destination, DateTimePicker, DataGridView kết quả) | B |
-| `SeatMapForm` (lưới Button tạo động từ `flight.Seats`, màu theo hạng, ghế đã đặt disable) | B |
-| `MyBookingsForm` (danh sách vé, nút Hủy → MessageBox hiện phí & tiền hoàn) | A |
-| Báo cáo nháp: diagram, Self-Explanation 5 yêu cầu + 3 nguyên lý (class/method cụ thể + lý do) | A: Polymorphism, req 2/4; B: Encapsulation, Composition, req 1/3/5 |
-| Mục race condition | B |
+| Tính giá vé và phí hủy theo hạng ghế | Ví dụ: vé Business đắt gấp 2,5 lần Economy; hủy vé Economy trước giờ bay dưới 24 giờ thì mất toàn bộ tiền, còn Business chỉ mất 20% |
+| Giữ ghế khi đặt | Khi một người đã chọn ghế 12A thì người khác không đặt được ghế đó nữa |
+| Tìm chuyến bay | Lọc danh sách chuyến theo điểm đi, điểm đến và ngày bay |
+| Đặt vé và hủy vé | Đặt vé: giữ ghế → tính giá → tạo vé. Hủy vé: tính số tiền được hoàn → trả ghế về trạng thái trống |
+| Kết nối các màn hình Người dùng | Tìm chuyến → chọn ghế → xác nhận đặt vé → xem "Vé của tôi" → hủy vé, chạy được từ đầu đến cuối |
 
-**Mốc cuối tuần 2:** đủ toàn bộ yêu cầu đề + GUI demo được → nộp được dù tuần 3 trục trặc.
+### Trần Quốc Huy — chức năng phía Admin
 
-## Tuần 3 — Mở rộng + bonus + bảo vệ
-| Việc | Người |
+| Việc cần làm | Giải thích |
 |---|---|
-| Thêm `PremiumEconomyClass`, `FirstClass` **chỉ bằng file mới**; ghi `git diff --stat` chứng minh không sửa class cũ (kể cả form — SeatMapForm tự hiện hạng mới) | A |
-| Test hạng mới: đặt & hủy, refund đúng | A |
-| Bonus concurrency: `Seat.TryLock()` atomic; test `Parallel.For` / `Task.WhenAll` 50 task giành 1 ghế → đúng 1 thành công | B |
-| (Tùy thời gian) giữ ghế có hạn — tự nhả sau N phút (dùng `TimeProvider`) | B |
-| Hoàn thiện GUI (thông báo lỗi thân thiện, làm mới sơ đồ ghế sau khi hủy) | A + B |
-| Cập nhật diagram + báo cáo, chụp màn hình GUI + output `dotnet test` làm evidence | A + B |
-| Hoàn thiện AI Usage Log | A + B |
-| **Tập bảo vệ:** mỗi người giải thích toàn bộ code; live-code thêm hạng mới hoặc đổi mốc phí hủy | A + B |
+| Thêm và chỉnh sửa chuyến bay | Admin nhập thông tin chuyến bay mới, hệ thống tự tạo sơ đồ ghế; sửa được giờ bay và giá gốc |
+| Lưu số tiền đã hoàn cho mỗi vé | Cần có dữ liệu này thì mới tính được doanh thu thực |
+| Tính báo cáo doanh thu | Tổng tiền đã thu, tổng tiền đã hoàn, doanh thu thực; chia theo từng chuyến bay và từng hạng ghế |
+| Kết nối các màn hình Admin | Tạo chuyến bay, quản lý vé (lọc, xem, hủy thay khách), xem báo cáo doanh thu |
+| Cập nhật class diagram | Bổ sung các lớp và chức năng mới của phần Admin để sơ đồ luôn khớp với code |
 
-## Cấu trúc báo cáo
-1. Problem restatement
-2. Class diagram + trách nhiệm từng class; sơ đồ 3 project (Core độc lập UI)
-3. Self-Explanation: từng yêu cầu 1–5 và từng nguyên lý (class/method cụ thể + vì sao phù hợp bài toán)
-4. Race condition & mitigation
-5. Extensibility: thêm hạng mới (diff chứng minh) + đổi UI không đụng Core
-6. Test evidence (bảng test case → kết quả, output `dotnet test`, screenshot GUI)
-7. AI Usage Log
-8. Build/run: yêu cầu Windows + .NET 8 SDK; `dotnet test`; `dotnet run --project AirlineBooking.WinForms`
+### Cả hai cùng làm
 
-## Verification
-- `dotnet test` toàn bộ xanh: 3 nhóm test bắt buộc + test hạng mới + test đa luồng.
-- Chạy WinForms: tìm chuyến → chọn ghế → đặt thành công; bấm lại ghế đã đặt → báo lỗi; hủy vé Economy vs Business → tiền hoàn khác nhau.
-- `AirlineBooking.Core.csproj` không có tham chiếu tới WinForms.
-- Đối chiếu checklist đề: 5 yêu cầu, 3 nguyên lý có Self-Explanation, 3 loại test, race condition, AI Usage Log.
+| Việc cần làm | Giải thích |
+|---|---|
+| Dữ liệu mẫu | Tạo sẵn một số chuyến bay để khi mở ứng dụng là có dữ liệu thử ngay |
+| Kiểm thử tự động (bắt buộc theo đề) | Viết chương trình kiểm tra tự động 3 tình huống: **(1)** đi trọn một lượt tìm chuyến → đặt vé → hủy vé → nhận tiền hoàn; **(2)** hệ thống từ chối khi hai người đặt cùng một ghế, hoặc khi hủy một vé hai lần; **(3)** cùng một thời điểm hủy, vé Economy và vé Business được hoàn số tiền khác nhau |
+
+Mỗi chức năng hoàn thành được lưu lên GitHub thành **một lần commit riêng** có mô tả rõ ràng, để báo cáo có thể dẫn chứng chính xác ai làm phần nào, ở file nào.
+
+---
+
+## Tuần 4 — Chỉnh sửa và hoàn thiện app
+
+| Người | Công việc |
+|---|---|
+| Cả hai | Sửa lỗi, làm mượt giao diện (thông báo lỗi thân thiện, làm mới sơ đồ ghế sau khi đặt / hủy) |
+| Ngô Thành Đạt | Bonus đa luồng: test nhiều luồng cùng đặt một ghế → chỉ một người thành công |
+| Trần Quốc Huy | Minh họa khả năng mở rộng: thêm hạng ghế mới (PremiumEconomy / First) chỉ bằng file mới, chứng minh bằng `git diff --stat` |
+| Cả hai | Báo cáo: tóm tắt đề, class diagram, Self-Explanation (dẫn link file + commit trên GitHub), race condition, test evidence, AI Usage Log, hướng dẫn build/run |
+| Cả hai | Tập vấn đáp: mỗi người giải thích được toàn bộ code, kể cả phần của người kia |
+
+---
+
+## Quy ước làm việc
+- Trước khi làm: **Pull**. Làm xong một việc nhỏ: **Commit** (message tiếng Anh, bắt đầu bằng động từ) → **Push**.
+- Ghi **AI Usage Log** ngay mỗi lần dùng AI (ngày, công cụ, nội dung hỏi, phần dùng / không dùng, đã sửa gì).
+- Báo cáo dẫn chứng bằng **permalink** GitHub (mở file → chọn dòng → phím `y`) kèm mã commit và message.
