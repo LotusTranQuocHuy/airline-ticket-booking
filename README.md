@@ -11,12 +11,12 @@ OOP Final Project — hệ thống đặt vé máy bay: tìm chuyến bay, chọ
 
 ```
 AirlineBooking.Core/
-├── Models/      Flight, Seat, SeatDefinition, Passenger, Booking, SeatStatus, BookingStatus
-├── Fares/       ISeatClass, SeatClassBase, CancellationTier,
-│                EconomyClass, BusinessClass, PremiumEconomyClass, FirstClass
-├── Services/    FlightCatalog, BookingService
-└── Exceptions/  SeatUnavailableException, InvalidBookingStateException, FlightNotFoundException
-docs/            Class diagram (ảnh + file Enterprise Architect), kế hoạch thực hiện
+├── Chuyến bay, ghế, vé:  Flight, Seat, Passenger, Booking, SeatStatus, BookingStatus
+├── Hạng ghế:             ISeatClass, SeatClassBase, CancellationTier,
+│                         EconomyClass, BusinessClass, PremiumEconomyClass, FirstClass
+├── Dịch vụ:              FlightCatalog, BookingService, RevenueReportService, RevenueLine
+└── Exception:            SeatUnavailableException, InvalidBookingStateException, FlightNotFoundException
+docs/                     Class diagram (ảnh + file Enterprise Architect), kế hoạch thực hiện
 ```
 
 ## Class diagram
