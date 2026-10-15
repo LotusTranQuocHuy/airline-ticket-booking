@@ -113,5 +113,5 @@ Mỗi chức năng hoàn thành được lưu lên GitHub thành **một lần c
 
 ## Quy ước làm việc
 - Trước khi làm: **Pull**. Làm xong một việc nhỏ: **Commit** (message tiếng Anh, bắt đầu bằng động từ) → **Push**.
-- Ghi **AI Usage Log** ngay mỗi lần dùng AI (ngày, công cụ, nội dung hỏi, phần dùng / không dùng, đã sửa gì).
+- Ghi **AI Usage Log** vào [`docs/AI_USAGE_LOG.md`](AI_USAGE_LOG.md) ngay mỗi lần dùng AI (ngày, người dùng, prompt, AI tạo ra gì, nhóm đã sửa gì, link commit chứa kết quả). Commit có nội dung do AI tạo phải ghi rõ trong mô tả commit.
 - Báo cáo dẫn chứng bằng **permalink** GitHub (mở file → chọn dòng → phím `y`) kèm mã commit và message.

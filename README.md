@@ -51,3 +51,5 @@ Hoặc mở `AirlineBooking.sln` bằng Visual Studio, chọn `AirlineBooking.Wi
 | Ngô Thành Đạt | Hiện thực code từ class diagram, giao diện & chức năng Người dùng (tìm chuyến, chọn ghế, đặt / hủy vé) |
 
 Kế hoạch chi tiết: [docs/PLAN.md](docs/PLAN.md)
+
+Nhật ký sử dụng AI: [docs/AI_USAGE_LOG.md](docs/AI_USAGE_LOG.md)
