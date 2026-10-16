@@ -1,4 +1,5 @@
 using AirlineBooking.Core;
+using AirlineBooking.WinForms.Admin;
 
 namespace AirlineBooking.WinForms;
 
@@ -55,7 +56,7 @@ public sealed class FrmLogin : Form
             WrapContents = false,
             Margin = new Padding(0, 22, 0, 10)
         };
-        var adminButton = UiKit.Button("Quản trị viên", height: 48);
+        var adminButton = UiKit.Button("Quản trị viên", primary: true, height: 48);
         adminButton.Width = 145;
         adminButton.Margin = new Padding(0, 4, 10, 4);
         adminButton.Click += (_, _) => OpenAdmin();

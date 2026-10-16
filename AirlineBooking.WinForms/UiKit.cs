@@ -140,6 +140,7 @@ internal sealed class LoginIllustrationPanel : Panel
     public LoginIllustrationPanel()
     {
         DoubleBuffered = true;
+        ResizeRedraw = true;
         Dock = DockStyle.Fill;
         BackColor = UiKit.Navy;
     }
