@@ -36,3 +36,15 @@ Ghi lại mọi lần nhóm dùng AI: ai dùng, hỏi gì, AI tạo ra gì, nhó
 | AI tạo ra | 21 file C# khung (.NET 8) chuyển từ code Java do Enterprise Architect xuất ra: field private, constructor, getter, constructor 4 hạng ghế với hệ số giá và bảng phí hủy; 3 class exception `SeatUnavailableException`, `InvalidBookingStateException`, `FlightNotFoundException`. Các method nghiệp vụ (`TryLock`, `Book`, `Cancel`, `Search`, báo cáo doanh thu) chỉ để khung, ghi chú `TODO (tuần 3)`, **chưa cài đặt**. |
 | Nhóm sửa / quyết định | Code được sinh từ class diagram do nhóm tự vẽ, nên tên class / method / tham số theo đúng sơ đồ của nhóm. Đổi tên tham số constructor `Seat` theo sơ đồ đã sửa. Ngô Thành Đạt đưa code lên GitHub. Phần logic nghiệp vụ nhóm sẽ tự cài đặt ở tuần 3. |
 | Kết quả | [`AirlineBooking.Core/`](../AirlineBooking.Core), [`AirlineBooking.WinForms/`](../AirlineBooking.WinForms) — commit [`e020817`](https://github.com/LotusTranQuocHuy/airline-ticket-booking/commit/e02081716adb15fc47f87595bcfe918a8662f884) |
+
+## Tuần 2
+
+### 1. Hoàn thiện giao diện Người dùng — Ngô Thành Đạt (15/10 – 17/10/2026)
+
+| Mục | Nội dung |
+|---|---|
+| Prompt | Yêu cầu triển khai giao diện Người dùng theo kế hoạch tuần 2 và ảnh tham khảo; chỉnh lựa chọn một chiều / khứ hồi, nhãn nút bị cắt, tìm chuyến và đặt vé từ chuyến gợi ý; đổi thương hiệu thành AirlineTicket; sửa các vùng giao diện bị chồng lấn; tổng hợp nội dung tuần 2 để bổ sung vào tài liệu AI Usage Log hiện có; chỉnh banner khi dòng mô tả bị tiêu đề che. |
+| Công cụ AI | Copilot SDK trong VS Code; thông tin model cụ thể không hiển thị trong phiên làm việc. |
+| AI tạo ra | Các form WinForms cho đăng nhập, trang chính Người dùng, tìm chuyến, chọn ghế, xác nhận đặt vé và vé của tôi; dữ liệu chuyến / vé mẫu và điều hướng giữa các form; bản tổng hợp công việc tuần 2; các chỉnh sửa bố cục, kích thước nút và vị trí dòng chữ trên banner. |
+| Nhóm sửa / quyết định | Ngô Thành Đạt cung cấp ảnh tham khảo, chạy ứng dụng và phản hồi các lỗi giao diện để chỉnh tiếp. Chọn dùng dữ liệu demo trong bộ nhớ; luồng khứ hồi hiện lưu / hiển thị ngày về nhưng đặt vé demo mới tạo vé cho lượt đi. Dòng mô tả banner được đặt thấp hơn phần tiêu đề để không còn đè lên nhau. |
+| Kết quả | Các form và dữ liệu demo Người dùng — commit [`7b0f82a`](https://github.com/LotusTranQuocHuy/airline-ticket-booking/commit/7b0f82a9e4815a33b774b7b2f0d238b247c70951). Sửa banner để dòng mô tả không đè tiêu đề — commit [`0d1a75e`](https://github.com/LotusTranQuocHuy/airline-ticket-booking/commit/0d1a75eb6f69f37a70619797fc4eb0f98a353c73). |
