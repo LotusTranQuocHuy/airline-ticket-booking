@@ -237,8 +237,8 @@ internal sealed class FrmUserMain : Form
             Size = new Size(ContentWidth, 196)
         };
         promo.Controls.Add(UiKit.At("ĐI XA HƠN, KHÁM PHÁ NHIỀU HƠN", 30, 25, 9, true, Color.FromArgb(190, 220, 255)));
-        promo.Controls.Add(UiKit.At("Chuyến đi mới\nđang chờ bạn.", 30, 53, 23, true, Color.White));
-        promo.Controls.Add(UiKit.At("Tìm chuyến bay phù hợp và chọn chỗ ngồi yêu thích.", 32, 153, 9, false, Color.White));
+        promo.Controls.Add(UiKit.At("Chuyến đi mới đang chờ bạn.", 30, 53, 23, true, Color.White));
+        promo.Controls.Add(UiKit.At("Tìm chuyến bay phù hợp và chọn chỗ ngồi yêu thích.", 32, 165, 9, false, Color.White));
         content.Controls.Add(promo);
 
         content.Controls.Add(UiKit.At("Điểm đến được gợi ý", 0, 335, 16, true));
