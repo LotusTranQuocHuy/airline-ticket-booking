@@ -57,33 +57,10 @@ Ghi lại mọi lần nhóm dùng AI: ai dùng, hỏi gì, AI tạo ra gì, nhó
 
 ### 2. Hoàn thiện giao diện Người dùng — Ngô Thành Đạt (15/10 – 17/10/2026)
 
-#### AI hỗ trợ
-
-- **Copilot** — AI assistant sử dụng Copilot SDK trong VS Code.
-- **Model:** GPT-6-Luna.
-- **Người dùng AI:** Ngô Thành Đạt.
-
-#### Prompt
-
-1. “Làm giao diện người dùng” theo kế hoạch tuần 2 và phong cách ảnh tham khảo.
-2. Chỉnh lựa chọn khứ hồi / một chiều, nút đăng xuất, bố cục phần khám phá hành trình và cho phép đặt vé từ các chuyến bay gợi ý.
-3. Sửa các chữ trên giao diện bị cắt; đổi tên Skyline thành AirlineTicket; chỉnh màn hình chọn ghế để thấy ghế 1A, 1B.
-4. Chỉnh banner: đưa tiêu đề “Chuyến đi mới đang chờ bạn” thành một dòng và đặt dòng mô tả sát góc trái dưới của khung.
-5. Tổng hợp công việc tuần 2 theo bố cục báo cáo trong ảnh tham khảo và bổ sung phần AI đã hỗ trợ vào mục của Ngô Thành Đạt trong AI Usage Log.
-
-#### AI tạo ra
-
-1. Các form WinForms và điều hướng luồng Người dùng: đăng nhập → tìm chuyến → chọn ghế → xác nhận đặt vé → xem vé của tôi.
-2. Dữ liệu chuyến bay / vé mẫu trong bộ nhớ; giao diện sơ đồ ghế có màu phân biệt hạng ghế và khóa ghế đã đặt.
-3. Các chỉnh sửa giao diện theo phản hồi: lựa chọn một chiều / khứ hồi, thương hiệu AirlineTicket, kích thước nút và bố cục chữ để tránh bị cắt hoặc chồng lấn.
-4. Nội dung báo cáo tổng hợp công việc tuần 2 và phần ghi nhận AI hỗ trợ cho Ngô Thành Đạt trong tài liệu này.
-
-#### Nhóm chỉnh sửa / quyết định
-
-Ngô Thành Đạt cung cấp ảnh tham khảo, chạy ứng dụng và phản hồi lỗi để tiếp tục điều chỉnh giao diện. Nhóm chọn dùng dữ liệu demo trong bộ nhớ. Khứ hồi hiện lưu / hiển thị ngày về, nhưng luồng đặt vé demo mới tạo vé cho lượt đi.
-
-#### Kết quả
-
-- Các form và dữ liệu demo Người dùng — commit [`7b0f82a`](https://github.com/LotusTranQuocHuy/airline-ticket-booking/commit/7b0f82a9e4815a33b774b7b2f0d238b247c70951).
-- Chỉnh banner tránh chồng lấn — commit [`0d1a75e`](https://github.com/LotusTranQuocHuy/airline-ticket-booking/commit/0d1a75eb6f69f37a70619797fc4eb0f98a353c73).
-- Đưa dòng mô tả banner xuống sát góc trái dưới — commit [`7753981`](https://github.com/LotusTranQuocHuy/airline-ticket-booking/commit/7753981).
+| Mục | Nội dung |
+|---|---|
+| Công cụ AI | **GitHub Copilot** (Copilot SDK trong VS Code) — AI assistant Copilot, model GPT-6-Luna. |
+| Prompt | Yêu cầu làm giao diện Người dùng theo kế hoạch tuần 2 và ảnh tham khảo; chỉnh lựa chọn một chiều / khứ hồi, nút đăng xuất, bố cục phần khám phá và chức năng đặt vé từ chuyến gợi ý; sửa nhãn bị cắt, đổi tên Skyline thành AirlineTicket, sửa sơ đồ ghế để thấy ghế 1A và 1B; chỉnh banner để tiêu đề nằm trên một dòng và dòng mô tả sát góc trái dưới; tổng hợp nội dung tuần 2 theo bố cục báo cáo. |
+| AI tạo ra | Các form WinForms và điều hướng luồng Người dùng (đăng nhập → tìm chuyến → chọn ghế → xác nhận đặt vé → vé của tôi); dữ liệu chuyến bay / vé mẫu trong bộ nhớ; sơ đồ ghế phân biệt hạng bằng màu và khóa ghế đã đặt; các chỉnh sửa giao diện theo phản hồi; nội dung tổng hợp báo cáo tuần 2. |
+| Nhóm sửa / quyết định | Ngô Thành Đạt cung cấp ảnh tham khảo, chạy thử và phản hồi để điều chỉnh giao diện. Chọn sử dụng dữ liệu demo trong bộ nhớ. Khứ hồi hiện lưu / hiển thị ngày về nhưng luồng đặt vé demo mới tạo vé cho lượt đi. |
+| Kết quả | Các form và dữ liệu demo Người dùng — commit [`7b0f82a`](https://github.com/LotusTranQuocHuy/airline-ticket-booking/commit/7b0f82a9e4815a33b774b7b2f0d238b247c70951). Chỉnh banner tránh chồng lấn — commit [`0d1a75e`](https://github.com/LotusTranQuocHuy/airline-ticket-booking/commit/0d1a75eb6f69f37a70619797fc4eb0f98a353c73). Căn dòng mô tả banner — commit [`7753981`](https://github.com/LotusTranQuocHuy/airline-ticket-booking/commit/7753981). |
