@@ -16,7 +16,12 @@ AirlineBooking.Core/
 │                         EconomyClass, BusinessClass, PremiumEconomyClass, FirstClass
 ├── Dịch vụ:              FlightCatalog, BookingService, RevenueReportService, RevenueLine
 └── Exception:            SeatUnavailableException, InvalidBookingStateException, FlightNotFoundException
-docs/                     Class diagram (ảnh + file Enterprise Architect), kế hoạch thực hiện
+AirlineBooking.WinForms/
+├── Chung:                FrmLogin, UiKit
+├── Người dùng:           FrmUserMain, FrmSearchFlight, FrmSeatMap, FrmBookingConfirm, FrmMyBookings, DemoData
+└── Admin/                FrmAdminMain, FrmFlightManager, FrmFlightEdit, FrmBookingManager, FrmRevenueReport,
+                          AdminTheme, AdminDemoData, Controls/ (CardPanel, MenuCard, BarChart, SeatLabel)
+docs/                     Class diagram (ảnh + file Enterprise Architect), kế hoạch thực hiện, AI Usage Log
 ```
 
 ## Class diagram

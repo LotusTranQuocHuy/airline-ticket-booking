@@ -2,9 +2,15 @@
 
 Ghi lại mọi lần nhóm dùng AI: ai dùng, hỏi gì, AI tạo ra gì, nhóm đã sửa gì và kết quả nằm ở commit nào trên GitHub.
 
-- **Công cụ:** Claude Code (ứng dụng Claude desktop)
-- **Model:** Claude Opus 5.5
-- **Quy ước:** commit có nội dung do AI tạo ghi rõ trong mô tả commit, hoặc có dòng `Co-Authored-By: Claude ...`
+**Công cụ AI nhóm đã dùng:**
+
+| Công cụ | Model | Người dùng | Dùng cho |
+|---|---|---|---|
+| Claude Code (ứng dụng Claude desktop, Anthropic) | Claude Opus 5.5 | Trần Quốc Huy | Kế hoạch, kiểm tra class diagram, khung code C#, code giao diện Admin |
+| Claude Design (Anthropic) | — | Trần Quốc Huy | Bản thiết kế (mockup) 5 màn hình Admin |
+| GitHub Copilot (Copilot SDK trong VS Code) | Không hiển thị trong phiên làm việc | Ngô Thành Đạt | Giao diện Người dùng |
+
+**Quy ước:** commit có nội dung do AI tạo ghi rõ trong mô tả commit, hoặc có dòng `Co-Authored-By: Claude ...` / `Co-authored-by: Copilot ...`
 
 ---
 
@@ -48,3 +54,13 @@ Ghi lại mọi lần nhóm dùng AI: ai dùng, hỏi gì, AI tạo ra gì, nhó
 | AI tạo ra | Các form WinForms cho đăng nhập, trang chính Người dùng, tìm chuyến, chọn ghế, xác nhận đặt vé và vé của tôi; dữ liệu chuyến / vé mẫu và điều hướng giữa các form; bản tổng hợp công việc tuần 2; các chỉnh sửa bố cục, kích thước nút và vị trí dòng chữ trên banner. |
 | Nhóm sửa / quyết định | Ngô Thành Đạt cung cấp ảnh tham khảo, chạy ứng dụng và phản hồi các lỗi giao diện để chỉnh tiếp. Chọn dùng dữ liệu demo trong bộ nhớ; luồng khứ hồi hiện lưu / hiển thị ngày về nhưng đặt vé demo mới tạo vé cho lượt đi. Dòng mô tả banner được đặt thấp hơn phần tiêu đề để không còn đè lên nhau. |
 | Kết quả | Các form và dữ liệu demo Người dùng — commit [`7b0f82a`](https://github.com/LotusTranQuocHuy/airline-ticket-booking/commit/7b0f82a9e4815a33b774b7b2f0d238b247c70951). Sửa banner để dòng mô tả không đè tiêu đề — commit [`0d1a75e`](https://github.com/LotusTranQuocHuy/airline-ticket-booking/commit/0d1a75eb6f69f37a70619797fc4eb0f98a353c73). |
+
+### 2. Giao diện Admin — Trần Quốc Huy (16/10 – 18/10/2026)
+
+| Mục | Nội dung |
+|---|---|
+| Công cụ AI | **Claude Design** (thiết kế mockup) và **Claude Code — model Claude Opus 5.5** (viết code WinForms). |
+| Prompt | Claude Design: gửi ảnh nhiệm vụ tuần 2 (5 màn hình Admin) kèm mô tả "Airline Ticket Booking System (C# / .NET 8 / WinForms)"; "Bạn xuất ra file để tôi đưa cho Claude Code". Claude Code: "Từ các file tôi gửi (Admin Forms.dc.html, README.md), hãy hoàn thiện form giao diện admin"; sau khi tự chạy thử: "Tôi chọn tông navy, đổi màu bên Admin cho đồng bộ"; "Hình đăng nhập có vẻ bị lỗi, nút chọn Role admin nên là màu xanh dương"; "Thêm nút Quay lại về trang chính"; "Hướng dẫn tôi tự sửa"; "Bước 2.3 tôi không biết đổi, bạn làm giúp"; "Bạn sửa phần đó giúp tôi". |
+| AI tạo ra | Claude Design: mockup HTML 5 form và tài liệu bàn giao (tên control, kích thước, màu); mức hoàn tiền 70% trong mockup do AI tự đặt làm ví dụ. Claude Code: 5 form `FrmAdminMain`, `FrmFlightManager`, `FrmFlightEdit`, `FrmBookingManager`, `FrmRevenueReport` (`.cs` + `.Designer.cs`), `AdminTheme`, các control tự vẽ (`CardPanel`, `MenuCard`, `BarChart`, `SeatLabel`) và dữ liệu mẫu `AdminDemoData`; thay mức hoàn 70% bằng bảng phí hủy của đề (Economy 10% / 30% / 100%, Business 0% / 20%); hướng dẫn từng bước đổi màu, sửa màn hình đăng nhập, thêm nút Quay lại; trực tiếp sửa màu chữ mặc định của 5 form và chỉnh vị trí, kiểu, phím Esc của nút Quay lại. |
+| Nhóm sửa / quyết định | Trần Quốc Huy tự chạy thử toàn bộ giao diện, phát hiện hình nền màn hình đăng nhập bị vỡ khi đổi kích thước cửa sổ; quyết định đổi giao diện Admin sang tông navy cho đồng bộ với phần Người dùng, đổi nút "Quản trị viên" sang màu xanh, thêm nút "Quay lại" cho 3 form. Tự sửa code: thêm `ResizeRedraw` cho hình nền đăng nhập (`UiKit.cs`), đổi nút "Quản trị viên" thành nút chính (`FrmLogin.cs`), đổi bảng màu `AdminTheme` sang màu của `UiKit`, thay màu trong các file Designer, thêm nút Quay lại vào 3 form bằng Visual Studio Designer. Logic dữ liệu mẫu chép tạm bảng phí hủy, sẽ thay bằng Core ở tuần 3. |
+| Kết quả | [`AirlineBooking.WinForms/Admin/`](https://github.com/LotusTranQuocHuy/airline-ticket-booking/tree/9b0aceb04ef9b48d2148e5134ac8055367366ff8/AirlineBooking.WinForms/Admin) — commit [`9b0aceb`](https://github.com/LotusTranQuocHuy/airline-ticket-booking/commit/9b0aceb04ef9b48d2148e5134ac8055367366ff8) "Add admin UI forms for flight, booking and revenue management" |
