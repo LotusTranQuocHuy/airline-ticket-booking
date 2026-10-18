@@ -8,7 +8,7 @@ Ghi lại mọi lần nhóm dùng AI: ai dùng, hỏi gì, AI tạo ra gì, nhó
 |---|---|---|---|
 | Claude Code (ứng dụng Claude desktop, Anthropic) | Claude Opus 5.5 | Trần Quốc Huy | Kế hoạch, kiểm tra class diagram, khung code C#, code giao diện Admin |
 | Claude Design (Anthropic) | — | Trần Quốc Huy | Bản thiết kế (mockup) 5 màn hình Admin |
-| GitHub Copilot (Copilot SDK trong VS Code) | Không hiển thị trong phiên làm việc | Ngô Thành Đạt | Giao diện Người dùng |
+| GitHub Copilot (Copilot SDK trong VS Code) | GPT-6-Luna | Ngô Thành Đạt | Giao diện Người dùng |
 
 **Quy ước:** commit có nội dung do AI tạo ghi rõ trong mô tả commit, hoặc có dòng `Co-Authored-By: Claude ...` / `Co-authored-by: Copilot ...`
 
@@ -45,17 +45,7 @@ Ghi lại mọi lần nhóm dùng AI: ai dùng, hỏi gì, AI tạo ra gì, nhó
 
 ## Tuần 2
 
-### 1. Hoàn thiện giao diện Người dùng — Ngô Thành Đạt (15/10 – 17/10/2026)
-
-| Mục | Nội dung |
-|---|---|
-| Prompt | Yêu cầu triển khai giao diện Người dùng theo kế hoạch tuần 2 và ảnh tham khảo; chỉnh lựa chọn một chiều / khứ hồi, nhãn nút bị cắt, tìm chuyến và đặt vé từ chuyến gợi ý; đổi thương hiệu thành AirlineTicket; sửa các vùng giao diện bị chồng lấn; tổng hợp nội dung tuần 2 để bổ sung vào tài liệu AI Usage Log hiện có; chỉnh banner khi dòng mô tả bị tiêu đề che. |
-| Công cụ AI | Copilot SDK trong VS Code; thông tin model cụ thể không hiển thị trong phiên làm việc. |
-| AI tạo ra | Các form WinForms cho đăng nhập, trang chính Người dùng, tìm chuyến, chọn ghế, xác nhận đặt vé và vé của tôi; dữ liệu chuyến / vé mẫu và điều hướng giữa các form; bản tổng hợp công việc tuần 2; các chỉnh sửa bố cục, kích thước nút và vị trí dòng chữ trên banner. |
-| Nhóm sửa / quyết định | Ngô Thành Đạt cung cấp ảnh tham khảo, chạy ứng dụng và phản hồi các lỗi giao diện để chỉnh tiếp. Chọn dùng dữ liệu demo trong bộ nhớ; luồng khứ hồi hiện lưu / hiển thị ngày về nhưng đặt vé demo mới tạo vé cho lượt đi. Dòng mô tả banner được đặt thấp hơn phần tiêu đề để không còn đè lên nhau. |
-| Kết quả | Các form và dữ liệu demo Người dùng — commit [`7b0f82a`](https://github.com/LotusTranQuocHuy/airline-ticket-booking/commit/7b0f82a9e4815a33b774b7b2f0d238b247c70951). Sửa banner để dòng mô tả không đè tiêu đề — commit [`0d1a75e`](https://github.com/LotusTranQuocHuy/airline-ticket-booking/commit/0d1a75eb6f69f37a70619797fc4eb0f98a353c73). |
-
-### 2. Giao diện Admin — Trần Quốc Huy (16/10 – 18/10/2026)
+### 1. Giao diện Admin — Trần Quốc Huy (16/10 – 18/10/2026)
 
 | Mục | Nội dung |
 |---|---|
@@ -64,3 +54,36 @@ Ghi lại mọi lần nhóm dùng AI: ai dùng, hỏi gì, AI tạo ra gì, nhó
 | AI tạo ra | Claude Design: mockup HTML 5 form và tài liệu bàn giao (tên control, kích thước, màu); mức hoàn tiền 70% trong mockup do AI tự đặt làm ví dụ. Claude Code: 5 form `FrmAdminMain`, `FrmFlightManager`, `FrmFlightEdit`, `FrmBookingManager`, `FrmRevenueReport` (`.cs` + `.Designer.cs`), `AdminTheme`, các control tự vẽ (`CardPanel`, `MenuCard`, `BarChart`, `SeatLabel`) và dữ liệu mẫu `AdminDemoData`; thay mức hoàn 70% bằng bảng phí hủy của đề (Economy 10% / 30% / 100%, Business 0% / 20%); hướng dẫn từng bước đổi màu, sửa màn hình đăng nhập, thêm nút Quay lại; trực tiếp sửa màu chữ mặc định của 5 form và chỉnh vị trí, kiểu, phím Esc của nút Quay lại. |
 | Nhóm sửa / quyết định | Trần Quốc Huy tự chạy thử toàn bộ giao diện, phát hiện hình nền màn hình đăng nhập bị vỡ khi đổi kích thước cửa sổ; quyết định đổi giao diện Admin sang tông navy cho đồng bộ với phần Người dùng, đổi nút "Quản trị viên" sang màu xanh, thêm nút "Quay lại" cho 3 form. Tự sửa code: thêm `ResizeRedraw` cho hình nền đăng nhập (`UiKit.cs`), đổi nút "Quản trị viên" thành nút chính (`FrmLogin.cs`), đổi bảng màu `AdminTheme` sang màu của `UiKit`, thay màu trong các file Designer, thêm nút Quay lại vào 3 form bằng Visual Studio Designer. Logic dữ liệu mẫu chép tạm bảng phí hủy, sẽ thay bằng Core ở tuần 3. |
 | Kết quả | [`AirlineBooking.WinForms/Admin/`](https://github.com/LotusTranQuocHuy/airline-ticket-booking/tree/9b0aceb04ef9b48d2148e5134ac8055367366ff8/AirlineBooking.WinForms/Admin) — commit [`9b0aceb`](https://github.com/LotusTranQuocHuy/airline-ticket-booking/commit/9b0aceb04ef9b48d2148e5134ac8055367366ff8) "Add admin UI forms for flight, booking and revenue management" |
+
+### 2. Hoàn thiện giao diện Người dùng — Ngô Thành Đạt (15/10 – 17/10/2026)
+
+#### AI hỗ trợ
+
+- **Copilot** — AI assistant sử dụng Copilot SDK trong VS Code.
+- **Model:** GPT-6-Luna.
+- **Người dùng AI:** Ngô Thành Đạt.
+
+#### Prompt
+
+1. “Làm giao diện người dùng” theo kế hoạch tuần 2 và phong cách ảnh tham khảo.
+2. Chỉnh lựa chọn khứ hồi / một chiều, nút đăng xuất, bố cục phần khám phá hành trình và cho phép đặt vé từ các chuyến bay gợi ý.
+3. Sửa các chữ trên giao diện bị cắt; đổi tên Skyline thành AirlineTicket; chỉnh màn hình chọn ghế để thấy ghế 1A, 1B.
+4. Chỉnh banner: đưa tiêu đề “Chuyến đi mới đang chờ bạn” thành một dòng và đặt dòng mô tả sát góc trái dưới của khung.
+5. Tổng hợp công việc tuần 2 theo bố cục báo cáo trong ảnh tham khảo và bổ sung phần AI đã hỗ trợ vào mục của Ngô Thành Đạt trong AI Usage Log.
+
+#### AI tạo ra
+
+1. Các form WinForms và điều hướng luồng Người dùng: đăng nhập → tìm chuyến → chọn ghế → xác nhận đặt vé → xem vé của tôi.
+2. Dữ liệu chuyến bay / vé mẫu trong bộ nhớ; giao diện sơ đồ ghế có màu phân biệt hạng ghế và khóa ghế đã đặt.
+3. Các chỉnh sửa giao diện theo phản hồi: lựa chọn một chiều / khứ hồi, thương hiệu AirlineTicket, kích thước nút và bố cục chữ để tránh bị cắt hoặc chồng lấn.
+4. Nội dung báo cáo tổng hợp công việc tuần 2 và phần ghi nhận AI hỗ trợ cho Ngô Thành Đạt trong tài liệu này.
+
+#### Nhóm chỉnh sửa / quyết định
+
+Ngô Thành Đạt cung cấp ảnh tham khảo, chạy ứng dụng và phản hồi lỗi để tiếp tục điều chỉnh giao diện. Nhóm chọn dùng dữ liệu demo trong bộ nhớ. Khứ hồi hiện lưu / hiển thị ngày về, nhưng luồng đặt vé demo mới tạo vé cho lượt đi.
+
+#### Kết quả
+
+- Các form và dữ liệu demo Người dùng — commit [`7b0f82a`](https://github.com/LotusTranQuocHuy/airline-ticket-booking/commit/7b0f82a9e4815a33b774b7b2f0d238b247c70951).
+- Chỉnh banner tránh chồng lấn — commit [`0d1a75e`](https://github.com/LotusTranQuocHuy/airline-ticket-booking/commit/0d1a75eb6f69f37a70619797fc4eb0f98a353c73).
+- Đưa dòng mô tả banner xuống sát góc trái dưới — commit [`7753981`](https://github.com/LotusTranQuocHuy/airline-ticket-booking/commit/7753981).
