@@ -64,7 +64,7 @@ internal sealed class FrmMyBookings : Form
         var bookings = DemoData.GetBookings(_passenger);
         foreach (var booking in bookings)
         {
-            var status = booking.IsCancelled ? "Đã hủy (demo)" : "Đã xác nhận (demo)";
+            var status = booking.IsCancelled ? "Đã hủy" : "Đã xác nhận ";
             var index = _grid.Rows.Add(
                 booking.Id,
                 $"{booking.Flight.Number} · {booking.Flight.Origin} → {booking.Flight.Destination}",
@@ -99,7 +99,7 @@ internal sealed class FrmMyBookings : Form
             $"Mô phỏng hủy vé:\nPhí hủy mẫu: {UiKit.Money(booking.Amount - previewRefund)}\n" +
             $"Tiền hoàn mẫu: {UiKit.Money(previewRefund)}\n\n" +
             "Bạn có muốn tiếp tục mô phỏng không? Chưa có giao dịch thật.",
-            "Xác nhận hủy vé (demo)",
+            "Xác nhận hủy vé ",
             MessageBoxButtons.YesNo,
             MessageBoxIcon.Question);
 

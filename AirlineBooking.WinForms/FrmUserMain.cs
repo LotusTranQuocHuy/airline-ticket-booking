@@ -407,7 +407,7 @@ internal sealed class FrmUserMain : Form
             MessageBox.Show(
                 this,
                 "Vé demo đã được thêm. Bạn có thể xem vé trong mục “Vé của tôi”.",
-                "Đặt vé thành công (demo)",
+                "Đặt vé thành công ",
                 MessageBoxButtons.OK,
                 MessageBoxIcon.Information);
         }

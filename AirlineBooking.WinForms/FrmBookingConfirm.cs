@@ -49,7 +49,7 @@ internal sealed class FrmBookingConfirm : Form
         cancelButton.Click += (_, _) => Close();
         card.Controls.Add(cancelButton);
 
-        var confirmButton = UiKit.Button("Đặt vé (demo)", primary: true, height: 44);
+        var confirmButton = UiKit.Button("Đặt vé ", primary: true, height: 44);
         confirmButton.Size = new Size(190, 44);
         confirmButton.Location = new Point(198, 425);
         confirmButton.Click += (_, _) => ConfirmDemoBooking();
@@ -70,7 +70,7 @@ internal sealed class FrmBookingConfirm : Form
             MessageBox.Show(
                 this,
                 $"Đã thêm vé mẫu {booking.Id} vào mục Vé của tôi.",
-                "Hoàn tất (demo)",
+                "Hoàn tất ",
                 MessageBoxButtons.OK,
                 MessageBoxIcon.Information);
             DialogResult = DialogResult.OK;
