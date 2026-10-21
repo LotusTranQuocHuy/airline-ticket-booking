@@ -13,6 +13,8 @@ internal sealed class FrmSeatMap : Form
     private Seat? _selectedSeatModel;
     private string? _selectedCode;
 
+    public Booking? ConfirmedBooking { get; private set; }
+
     public FrmSeatMap(Passenger passenger, DemoFlight flight)
     {
         _passenger = passenger;
@@ -104,7 +106,7 @@ internal sealed class FrmSeatMap : Form
         _continueButton.Enabled = false;
         _continueButton.Width = 210;
         _continueButton.Location = new Point(20, 403);
-        _continueButton.Click += (_, _) => ContinueToConfirmation();
+        _continueButton.Click += (_, _) => ContinueToConfirmation(seatGrid);
         detailCard.Controls.Add(_continueButton);
         var backButton = UiKit.Button("←  Quay lại", height: 40);
         backButton.Width = 210;
@@ -177,8 +179,7 @@ internal sealed class FrmSeatMap : Form
                 .FirstOrDefault(button => button.Text == _selectedCode);
             if (previous is not null)
             {
-                previous.BackColor = _seatStyles[_selectedCode].Color;
-                previous.ForeColor = UiKit.Navy;
+                SetSeatAvailability(previous, _flight.Flight.GetSeat(_selectedCode)!);
             }
         }
 
@@ -191,7 +192,7 @@ internal sealed class FrmSeatMap : Form
         _continueButton.Enabled = true;
     }
 
-    private void ContinueToConfirmation()
+    private void ContinueToConfirmation(TableLayoutPanel seatGrid)
     {
         if (_selectedCode is null || _selectedSeatModel is null)
         {
@@ -199,10 +200,50 @@ internal sealed class FrmSeatMap : Form
         }
 
         using var confirmation = new FrmBookingConfirm(_passenger, _flight, _selectedSeatModel);
-        if (confirmation.ShowDialog(this) == DialogResult.OK)
+        if (confirmation.ShowDialog(this) == DialogResult.OK &&
+            confirmation.ConfirmedBooking is { } booking)
         {
+            ConfirmedBooking = booking;
             DialogResult = DialogResult.OK;
             Close();
+            return;
         }
+
+        RefreshSeatAvailability(seatGrid);
+    }
+
+    private void RefreshSeatAvailability(TableLayoutPanel seatGrid)
+    {
+        foreach (var seatButton in seatGrid.Controls.OfType<Button>())
+        {
+            var seat = _flight.Flight.GetSeat(seatButton.Text);
+            if (seat is not null)
+            {
+                SetSeatAvailability(seatButton, seat);
+            }
+        }
+
+        if (_selectedSeatModel is null || _selectedSeatModel.IsAvailable())
+        {
+            return;
+        }
+
+        _selectedCode = null;
+        _selectedSeatModel = null;
+        _selectedSeat.Text = "Ghế vừa được đặt";
+        _price.Text = "—";
+        _continueButton.Enabled = false;
+    }
+
+    private void SetSeatAvailability(Button seatButton, Seat seat)
+    {
+        var available = seat.IsAvailable();
+        seatButton.Enabled = available;
+        seatButton.BackColor = available
+            ? _seatStyles[seat.GetCode()].Color
+            : Color.FromArgb(220, 225, 232);
+        seatButton.ForeColor = available
+            ? UiKit.Navy
+            : Color.FromArgb(143, 151, 163);
     }
 }

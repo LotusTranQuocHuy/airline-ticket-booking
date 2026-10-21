@@ -17,11 +17,35 @@ internal static class DemoData
     private static readonly DateTime FirstDeparture = DateTime.Today.AddDays(3).AddHours(8);
     private static readonly FlightCatalog FlightCatalog = new();
     private static readonly BookingService BookingService = new(FlightCatalog, TimeProvider.System);
+    private static readonly Dictionary<string, Passenger> Passengers = new(StringComparer.OrdinalIgnoreCase);
+    private static readonly object PassengerSync = new();
     private static readonly IReadOnlyList<DemoFlight> Flights = CreateFlights();
 
     static DemoData()
     {
         SeedUnavailableSeats();
+    }
+
+    public static Passenger GetOrCreatePassenger(string fullName, string email)
+    {
+        var normalizedName = fullName.Trim();
+        var normalizedEmail = email.Trim();
+        ArgumentException.ThrowIfNullOrWhiteSpace(normalizedName);
+        var passengerKey = normalizedEmail.Length > 0
+            ? $"email:{normalizedEmail}"
+            : $"name:{normalizedName}";
+
+        lock (PassengerSync)
+        {
+            if (Passengers.TryGetValue(passengerKey, out var passenger))
+            {
+                return passenger;
+            }
+
+            passenger = new Passenger(Guid.NewGuid().ToString("N"), normalizedName, normalizedEmail);
+            Passengers.Add(passengerKey, passenger);
+            return passenger;
+        }
     }
 
     public static IReadOnlyList<DemoFlight> GetFlights() => Flights;
@@ -42,8 +66,21 @@ internal static class DemoData
 
     public static IReadOnlyList<Booking> GetBookings(Passenger passenger) =>
         BookingService.GetBookingsByPassenger(passenger.GetId())
+            .Where(booking => booking.GetStatus() == BookingStatus.Confirmed)
             .OrderByDescending(booking => booking.GetBookedAt())
             .ToArray();
+
+    public static string FormatBookingReceipt(Booking booking)
+    {
+        var flight = booking.GetFlight();
+        var seat = booking.GetSeat();
+        return $"Mã vé: {booking.GetBookingId()}\n" +
+               $"Chuyến: {flight.GetFlightNumber()} · {flight.GetOrigin()} → {flight.GetDestination()}\n" +
+               $"Khởi hành: {flight.GetDeparture():dd/MM/yyyy HH:mm}\n" +
+               $"Ghế: {seat.GetCode()} · {seat.GetSeatClass().GetName()}\n" +
+               $"Tổng tiền: {UiKit.Money(booking.GetPaidAmount())}\n\n" +
+               "Bạn có thể xem vé trong mục “Vé của tôi”.";
+    }
 
     public static Booking Book(Passenger passenger, DemoFlight flight, string seatCode) =>
         BookingService.Book(flight.Number, seatCode, passenger);
@@ -61,6 +98,17 @@ internal static class DemoData
         }
 
         return BookingService.Cancel(bookingId);
+    }
+
+    public static Passenger Transfer(
+        Passenger currentPassenger,
+        string bookingId,
+        string recipientName,
+        string recipientEmail)
+    {
+        var recipient = GetOrCreatePassenger(recipientName, recipientEmail);
+        BookingService.Transfer(bookingId, currentPassenger, recipient);
+        return recipient;
     }
 
     private static IReadOnlyList<DemoFlight> CreateFlights()

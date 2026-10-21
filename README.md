@@ -1,7 +1,7 @@
 # Airline Ticket Booking System
 
-OOP Final Project — hệ thống đặt vé máy bay: tìm chuyến bay, chọn/khóa ghế theo hạng, hủy vé và hoàn tiền theo hạng ghế và thời gian còn lại trước giờ bay.
-Ứng dụng hiện dùng các chuyến bay mẫu; vé và trạng thái ghế được lưu trong bộ nhớ trong thời gian ứng dụng chạy.
+OOP Final Project — hệ thống đặt vé máy bay: tìm chuyến bay, chọn/khóa ghế theo hạng, hủy vé và hoàn tiền theo hạng ghế và thời gian còn lại trước giờ bay, hoặc chuyển vé sang hành khách khác.
+Ứng dụng hiện dùng các chuyến bay mẫu; vé, trạng thái ghế và danh tính hành khách được lưu trong bộ nhớ trong thời gian ứng dụng chạy.
 
 ## Cấu trúc solution
 

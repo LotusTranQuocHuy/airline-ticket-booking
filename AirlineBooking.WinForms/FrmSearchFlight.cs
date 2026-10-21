@@ -28,12 +28,12 @@ internal sealed class FrmSearchFlight : Form
     {
         _passenger = passenger;
         UiKit.ConfigureForm(this, "Tìm chuyến bay | AirlineTicket");
-        Controls.Add(UiKit.Header(
+        var header = UiKit.Header(
             "ĐẶT VÉ",
             "Tìm chuyến bay",
             isRoundTrip && returnDate is { } tripReturn
                 ? $"Khứ hồi · Lượt đi {departureDate ?? DateTime.Today:dd/MM/yyyy} · Lượt về {tripReturn:dd/MM/yyyy}"
-                : $"Một chiều · Ngày đi {departureDate ?? DateTime.Today:dd/MM/yyyy}"));
+                : $"Một chiều · Ngày đi {departureDate ?? DateTime.Today:dd/MM/yyyy}");
 
         var content = new Panel
         {
@@ -114,7 +114,20 @@ internal sealed class FrmSearchFlight : Form
         footer.Controls.Add(continueButton, 1, 0);
         layout.Controls.Add(footer, 0, 3);
         content.Controls.Add(layout);
-        Controls.Add(content);
+        var root = new TableLayoutPanel
+        {
+            Dock = DockStyle.Fill,
+            ColumnCount = 1,
+            RowCount = 2,
+            Margin = Padding.Empty,
+            Padding = Padding.Empty
+        };
+        root.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100F));
+        root.RowStyles.Add(new RowStyle(SizeType.Absolute, 116F));
+        root.RowStyles.Add(new RowStyle(SizeType.Percent, 100F));
+        root.Controls.Add(header, 0, 0);
+        root.Controls.Add(content, 0, 1);
+        Controls.Add(root);
 
         _origin.SelectedIndex = _origin.Items.IndexOf(origin ?? "TP. Hồ Chí Minh");
         _destination.SelectedIndex = _destination.Items.IndexOf(destination ?? "Hà Nội");
@@ -202,11 +215,12 @@ internal sealed class FrmSearchFlight : Form
         }
 
         using var seatMap = new FrmSeatMap(_passenger, flight);
-        if (seatMap.ShowDialog(this) == DialogResult.OK)
+        if (seatMap.ShowDialog(this) == DialogResult.OK &&
+            seatMap.ConfirmedBooking is { } booking)
         {
             MessageBox.Show(
                 this,
-                "Đặt vé thành công. Bạn có thể xem vé trong mục “Vé của tôi”.",
+                DemoData.FormatBookingReceipt(booking),
                 "Đặt vé thành công",
                 MessageBoxButtons.OK,
                 MessageBoxIcon.Information);

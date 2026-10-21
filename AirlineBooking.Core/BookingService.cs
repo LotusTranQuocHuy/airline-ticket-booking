@@ -65,4 +65,24 @@ public class BookingService
 
         return booking.Cancel(_time.GetLocalNow().DateTime);
     }
+
+    public void Transfer(string bookingId, Passenger currentPassenger, Passenger newPassenger)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(bookingId);
+        ArgumentNullException.ThrowIfNull(currentPassenger);
+        ArgumentNullException.ThrowIfNull(newPassenger);
+
+        Booking? booking;
+        lock (_sync)
+        {
+            booking = _bookings.FirstOrDefault(candidate => candidate.GetBookingId() == bookingId);
+        }
+
+        if (booking is null)
+        {
+            throw new InvalidBookingStateException($"Không tìm thấy vé {bookingId}.");
+        }
+
+        booking.TransferTo(currentPassenger, newPassenger);
+    }
 }

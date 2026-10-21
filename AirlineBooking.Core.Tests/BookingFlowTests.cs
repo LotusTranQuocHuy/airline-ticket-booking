@@ -94,6 +94,46 @@ public sealed class BookingFlowTests
         Assert.Equal(SeatStatus.Available, businessSeat.GetStatus());
     }
 
+    [Fact]
+    public void TransferMovesBookingAndSeatOwnershipToTheRecipient()
+    {
+        var now = new DateTime(2030, 4, 15, 8, 0, 0, DateTimeKind.Utc);
+        var (_, flight, service) = CreateBookingSystem(now, now.AddHours(72));
+        var seat = AddSeat(flight, "12A", new EconomyClass());
+        var currentPassenger = new Passenger("passenger-1", "Nguyen Van A", "a@example.com");
+        var recipient = new Passenger("passenger-2", "Tran Thi B", "b@example.com");
+        var booking = service.Book("VN205", "12A", currentPassenger);
+
+        service.Transfer(booking.GetBookingId(), currentPassenger, recipient);
+
+        Assert.Equal(recipient.GetId(), booking.GetPassenger().GetId());
+        Assert.Empty(service.GetBookingsByPassenger(currentPassenger.GetId()));
+        Assert.Equal(booking, Assert.Single(service.GetBookingsByPassenger(recipient.GetId())));
+        Assert.Equal(SeatStatus.Booked, seat.GetStatus());
+        Assert.Throws<InvalidBookingStateException>(
+            () => service.Transfer(booking.GetBookingId(), currentPassenger, recipient));
+
+        service.Cancel(booking.GetBookingId());
+
+        Assert.Equal(SeatStatus.Available, seat.GetStatus());
+    }
+
+    [Fact]
+    public void TransferRejectsCancelledBooking()
+    {
+        var now = new DateTime(2030, 4, 15, 8, 0, 0, DateTimeKind.Utc);
+        var (_, flight, service) = CreateBookingSystem(now, now.AddHours(72));
+        AddSeat(flight, "12A", new EconomyClass());
+        var currentPassenger = new Passenger("passenger-1", "Nguyen Van A", string.Empty);
+        var recipient = new Passenger("passenger-2", "Tran Thi B", string.Empty);
+        var booking = service.Book("VN205", "12A", currentPassenger);
+        service.Cancel(booking.GetBookingId());
+
+        Assert.Throws<InvalidBookingStateException>(
+            () => service.Transfer(booking.GetBookingId(), currentPassenger, recipient));
+        Assert.Empty(service.GetBookingsByPassenger(recipient.GetId()));
+    }
+
     private static (FlightCatalog Catalog, Flight Flight, BookingService Service) CreateBookingSystem(
         DateTime now,
         DateTime departure)

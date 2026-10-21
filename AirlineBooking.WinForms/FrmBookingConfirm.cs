@@ -7,6 +7,9 @@ internal sealed class FrmBookingConfirm : Form
     private readonly Passenger _passenger;
     private readonly DemoFlight _flight;
     private readonly string _seatCode;
+    private readonly Button _confirmButton;
+
+    public Booking? ConfirmedBooking { get; private set; }
 
     public FrmBookingConfirm(
         Passenger passenger,
@@ -19,10 +22,10 @@ internal sealed class FrmBookingConfirm : Form
         var seatClass = seat.GetSeatClass().GetName();
         var amount = seat.GetSeatClass().CalculatePrice(seat.GetPrice());
         UiKit.ConfigureForm(this, "Xác nhận đặt vé | AirlineTicket");
-        Controls.Add(UiKit.Header(
+        var header = UiKit.Header(
             "HOÀN TẤT",
             "Xác nhận thông tin",
-            "Kiểm tra lại hành trình và ghế trước khi tiếp tục."));
+            "Kiểm tra lại hành trình và ghế trước khi tiếp tục.");
 
         var card = UiKit.WhiteCard();
         card.Dock = DockStyle.Fill;
@@ -45,19 +48,33 @@ internal sealed class FrmBookingConfirm : Form
         cancelButton.Click += (_, _) => Close();
         card.Controls.Add(cancelButton);
 
-        var confirmButton = UiKit.Button("Đặt vé ", primary: true, height: 44);
-        confirmButton.Size = new Size(190, 44);
-        confirmButton.Location = new Point(198, 425);
-        confirmButton.Click += (_, _) => ConfirmBooking();
-        card.Controls.Add(confirmButton);
-        Controls.Add(card);
+        _confirmButton = UiKit.Button("Đặt vé", primary: true, height: 44);
+        _confirmButton.Size = new Size(190, 44);
+        _confirmButton.Location = new Point(198, 425);
+        _confirmButton.Click += (_, _) => ConfirmBooking();
+        card.Controls.Add(_confirmButton);
+        var root = new TableLayoutPanel
+        {
+            Dock = DockStyle.Fill,
+            ColumnCount = 1,
+            RowCount = 2,
+            Margin = Padding.Empty,
+            Padding = Padding.Empty
+        };
+        root.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100F));
+        root.RowStyles.Add(new RowStyle(SizeType.Absolute, 116F));
+        root.RowStyles.Add(new RowStyle(SizeType.Percent, 100F));
+        root.Controls.Add(header, 0, 0);
+        root.Controls.Add(card, 0, 1);
+        Controls.Add(root);
     }
 
     private void ConfirmBooking()
     {
+        _confirmButton.Enabled = false;
         try
         {
-            DemoData.Book(_passenger, _flight, _seatCode);
+            ConfirmedBooking = DemoData.Book(_passenger, _flight, _seatCode);
             DialogResult = DialogResult.OK;
             Close();
         }
@@ -65,6 +82,8 @@ internal sealed class FrmBookingConfirm : Form
         {
             MessageBox.Show(this, ex.Message, "Không thể đặt vé",
                 MessageBoxButtons.OK, MessageBoxIcon.Warning);
+            DialogResult = DialogResult.Cancel;
+            Close();
         }
     }
 }

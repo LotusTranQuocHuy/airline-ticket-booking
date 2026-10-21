@@ -96,6 +96,22 @@ public class Seat
         }
     }
 
+    internal void TransferTo(Passenger currentPassenger, Passenger newPassenger)
+    {
+        ArgumentNullException.ThrowIfNull(currentPassenger);
+        ArgumentNullException.ThrowIfNull(newPassenger);
+        lock (_sync)
+        {
+            if (_status != SeatStatus.Booked || !IsHeldBy(currentPassenger))
+            {
+                throw new InvalidBookingStateException(
+                    $"Không thể chuyển ghế {_seatCode} vì vé không còn thuộc hành khách hiện tại.");
+            }
+
+            _holder = newPassenger;
+        }
+    }
+
     internal void ChangePrice(decimal newPrice)
     {
         if (newPrice <= 0)

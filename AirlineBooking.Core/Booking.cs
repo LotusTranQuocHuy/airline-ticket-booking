@@ -9,7 +9,7 @@ public class Booking
     private readonly string _bookingId;
     private readonly Flight _flight;
     private readonly Seat _seat;
-    private readonly Passenger _passenger;
+    private Passenger _passenger;
     private readonly decimal _paidAmount;
     private BookingStatus _status;
     private readonly DateTime _bookedAt;
@@ -85,6 +85,33 @@ public class Booking
         }
     }
 
+    public void TransferTo(Passenger currentPassenger, Passenger newPassenger)
+    {
+        ArgumentNullException.ThrowIfNull(currentPassenger);
+        ArgumentNullException.ThrowIfNull(newPassenger);
+
+        lock (_sync)
+        {
+            if (_status != BookingStatus.Confirmed)
+            {
+                throw new InvalidBookingStateException($"Không thể chuyển vé {_bookingId} vì vé đã bị hủy.");
+            }
+
+            if (!string.Equals(_passenger.GetId(), currentPassenger.GetId(), StringComparison.Ordinal))
+            {
+                throw new InvalidBookingStateException("Bạn không phải chủ sở hữu hiện tại của vé này.");
+            }
+
+            if (string.Equals(currentPassenger.GetId(), newPassenger.GetId(), StringComparison.Ordinal))
+            {
+                throw new InvalidBookingStateException("Vé đã thuộc về hành khách được chọn.");
+            }
+
+            _seat.TransferTo(currentPassenger, newPassenger);
+            _passenger = newPassenger;
+        }
+    }
+
     private (decimal Fee, decimal Refund) CalculateCancellationQuote(DateTime now)
     {
         if (_status != BookingStatus.Confirmed)
@@ -109,7 +136,13 @@ public class Booking
 
     public Seat GetSeat() => _seat;
 
-    public Passenger GetPassenger() => _passenger;
+    public Passenger GetPassenger()
+    {
+        lock (_sync)
+        {
+            return _passenger;
+        }
+    }
 
     public decimal GetPaidAmount() => _paidAmount;
 

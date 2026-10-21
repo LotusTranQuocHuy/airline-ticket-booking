@@ -4,12 +4,20 @@ namespace AirlineBooking.WinForms;
 
 internal sealed class FrmUserMain : Form
 {
-    private const int ContentWidth = 1220;
+    private const int MaximumContentWidth = 1220;
     private readonly Passenger _passenger;
-    private readonly Panel _hero = new() { Dock = DockStyle.Fill, BackColor = UiKit.Navy };
+    private readonly TableLayoutPanel _hero = new()
+    {
+        Dock = DockStyle.Fill,
+        BackColor = UiKit.Navy,
+        ColumnCount = 1,
+        RowCount = 2,
+        Margin = Padding.Empty,
+        Padding = Padding.Empty
+    };
     private readonly Panel _searchContent = new()
     {
-        Width = ContentWidth,
+        Width = MaximumContentWidth,
         Height = 336,
         BackColor = Color.Transparent
     };
@@ -27,6 +35,9 @@ internal sealed class FrmUserMain : Form
     {
         _passenger = passenger;
         UiKit.ConfigureForm(this, "Đặt vé máy bay | AirlineTicket");
+        _hero.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100F));
+        _hero.RowStyles.Add(new RowStyle(SizeType.Absolute, 76F));
+        _hero.RowStyles.Add(new RowStyle(SizeType.Percent, 100F));
         BuildNavigation();
         BuildSearchHero();
         var root = new TableLayoutPanel
@@ -49,8 +60,7 @@ internal sealed class FrmUserMain : Form
     {
         var navigation = new Panel
         {
-            Dock = DockStyle.Top,
-            Height = 76,
+            Dock = DockStyle.Fill,
             BackColor = UiKit.Navy,
             Padding = new Padding(40, 0, 40, 0)
         };
@@ -100,29 +110,41 @@ internal sealed class FrmUserMain : Form
             right.Location = new Point(Math.Max(0, navigation.ClientSize.Width - right.Width), 0);
         };
 
-        _hero.Controls.Add(navigation);
+        _hero.Controls.Add(navigation, 0, 0);
     }
 
     private void BuildSearchHero()
     {
-        _searchContent.Left = Math.Max(28, (ClientSize.Width - ContentWidth) / 2);
-        _searchContent.Top = 83;
-        _hero.Resize += (_, _) =>
+        var searchArea = new Panel
         {
-            _searchContent.Left = Math.Max(28, (ClientSize.Width - ContentWidth) / 2);
+            Dock = DockStyle.Fill,
+            BackColor = UiKit.Navy
+        };
+        _searchContent.Top = 22;
+        searchArea.Resize += (_, _) =>
+        {
+            _searchContent.Width = GetContentWidth(searchArea.ClientSize.Width);
+            _searchContent.Left = Math.Max(28, (searchArea.ClientSize.Width - _searchContent.Width) / 2);
         };
 
-        var title = UiKit.At("Dễ dàng tìm chuyến bay cho hành trình tiếp theo.", 0, 0, 25, true, Color.White);
+        var title = UiKit.At("Dễ dàng tìm chuyến bay cho hành trình tiếp theo.", 0, 10, 25, true, Color.White);
+        title.AutoSize = false;
+        title.Size = new Size(MaximumContentWidth, 42);
+        title.TextAlign = ContentAlignment.MiddleLeft;
         _searchContent.Controls.Add(title);
         _welcome.Text = $"Chào {_passenger.GetFullName()}, chọn hành trình bạn muốn khám phá.";
-        _welcome.Location = new Point(2, 45);
+        _welcome.AutoSize = false;
+        _welcome.Location = new Point(2, 60);
+        _welcome.Size = new Size(MaximumContentWidth - 4, 22);
+        _welcome.TextAlign = ContentAlignment.MiddleLeft;
+        _welcome.AutoEllipsis = true;
         _searchContent.Controls.Add(_welcome);
 
-        _roundTripButton.Location = new Point(0, 82);
+        _roundTripButton.Location = new Point(0, 94);
         _roundTripButton.Size = new Size(145, 38);
         _roundTripButton.TextAlign = ContentAlignment.MiddleCenter;
         _roundTripButton.AutoEllipsis = false;
-        _oneWayButton.Location = new Point(155, 82);
+        _oneWayButton.Location = new Point(155, 94);
         _oneWayButton.Size = new Size(155, 38);
         _oneWayButton.TextAlign = ContentAlignment.MiddleCenter;
         _oneWayButton.AutoEllipsis = false;
@@ -135,8 +157,8 @@ internal sealed class FrmUserMain : Form
         PopulateSearchChoices();
         var searchRow = new TableLayoutPanel
         {
-            Location = new Point(0, 138),
-            Size = new Size(ContentWidth, 94),
+            Location = new Point(0, 146),
+            Size = new Size(MaximumContentWidth, 94),
             ColumnCount = 6,
             RowCount = 1,
             Margin = new Padding(0),
@@ -161,11 +183,12 @@ internal sealed class FrmUserMain : Form
         searchButton.Click += (_, _) => SearchFlights();
         searchRow.Controls.Add(searchButton, 5, 0);
         _searchContent.Controls.Add(searchRow);
+        _searchContent.Resize += (_, _) => searchRow.Width = _searchContent.ClientSize.Width;
 
         var swapButton = UiKit.Button("⇄", height: 40);
         swapButton.Size = new Size(42, 42);
         swapButton.FlatAppearance.BorderColor = UiKit.Border;
-        swapButton.Location = new Point(224, 164);
+        swapButton.Location = new Point(224, 172);
         swapButton.BringToFront();
         swapButton.Click += (_, _) => SwapLocations();
         _searchContent.Controls.Add(swapButton);
@@ -176,14 +199,14 @@ internal sealed class FrmUserMain : Form
             AutoSize = true,
             ForeColor = Color.White,
             Font = new Font("Segoe UI", 9F),
-            Location = new Point(0, 250)
+            Location = new Point(0, 248)
         };
         _searchContent.Controls.Add(nonstop);
 
         var demoNote = UiKit.At(
             "Các chuyến bay hiển thị là dữ liệu mẫu; đặt và hủy vé được xử lý trong phiên ứng dụng.",
             0,
-            285,
+            279,
             9,
             false,
             Color.FromArgb(177, 197, 220));
@@ -202,7 +225,8 @@ internal sealed class FrmUserMain : Form
             }
             _returnDate.MinDate = _departureDate.Value.Date;
         };
-        _hero.Controls.Add(_searchContent);
+        searchArea.Controls.Add(_searchContent);
+        _hero.Controls.Add(searchArea, 0, 1);
     }
 
     private Panel BuildDiscoverSection()
@@ -216,7 +240,7 @@ internal sealed class FrmUserMain : Form
 
         var content = new Panel
         {
-            Width = ContentWidth,
+            Width = MaximumContentWidth,
             Height = 610,
             BackColor = Color.Transparent
         };
@@ -234,7 +258,7 @@ internal sealed class FrmUserMain : Form
         var promo = new TravelPromoPanel
         {
             Location = new Point(0, 104),
-            Size = new Size(ContentWidth, 196)
+            Size = new Size(MaximumContentWidth, 196)
         };
         promo.Controls.Add(UiKit.At("ĐI XA HƠN, KHÁM PHÁ NHIỀU HƠN", 30, 25, 9, true, Color.FromArgb(190, 220, 255)));
         promo.Controls.Add(UiKit.At("Chuyến đi mới đang chờ bạn.", 30, 53, 23, true, Color.White));
@@ -245,26 +269,45 @@ internal sealed class FrmUserMain : Form
         var cards = new FlowLayoutPanel
         {
             Location = new Point(0, 375),
-            Size = new Size(ContentWidth, 178),
+            Size = new Size(MaximumContentWidth, 178),
             WrapContents = false,
             BackColor = Color.Transparent,
             Margin = new Padding(0)
         };
-        foreach (var flight in DemoData.GetFlights().Take(4))
+        var suggestedFlights = DemoData.GetFlights().Take(4).ToArray();
+        foreach (var flight in suggestedFlights)
         {
-            cards.Controls.Add(CreateFlightCard(flight));
+            cards.Controls.Add(CreateFlightCard(flight, GetSuggestedCardWidth(MaximumContentWidth)));
         }
         content.Controls.Add(cards);
 
         discover.Resize += (_, _) =>
         {
-            content.Left = Math.Max(28, (discover.ClientSize.Width - ContentWidth) / 2);
+            var contentWidth = GetContentWidth(discover.ClientSize.Width);
+            content.Width = contentWidth;
+            content.Left = Math.Max(28, (discover.ClientSize.Width - contentWidth) / 2);
             content.Top = 0;
+            promo.Width = contentWidth;
+            cards.Width = contentWidth;
+            var cardWidth = GetSuggestedCardWidth(contentWidth);
+            for (var index = 0; index < cards.Controls.Count; index++)
+            {
+                if (cards.Controls[index] is Panel card)
+                {
+                    card.Width = cardWidth;
+                    card.Margin = new Padding(0, 0, index == cards.Controls.Count - 1 ? 0 : 12, 0);
+                }
+            }
         };
-        content.Left = Math.Max(28, (ClientSize.Width - ContentWidth) / 2);
         discover.Controls.Add(content);
         return discover;
     }
+
+    private static int GetContentWidth(int availableWidth) =>
+        Math.Min(MaximumContentWidth, Math.Max(760, availableWidth - 56));
+
+    private static int GetSuggestedCardWidth(int contentWidth) =>
+        Math.Max(220, (contentWidth - 36) / 4);
 
     private static Panel CreateSearchField(string caption, Control input)
     {
@@ -381,17 +424,17 @@ internal sealed class FrmUserMain : Form
         search.ShowDialog(this);
     }
 
-    private Panel CreateFlightCard(DemoFlight flight)
+    private Panel CreateFlightCard(DemoFlight flight, int width)
     {
         var card = UiKit.WhiteCard();
-        card.Size = new Size(280, 164);
-        card.Margin = new Padding(0, 0, 20, 0);
+        card.Size = new Size(width, 164);
+        card.Margin = new Padding(0, 0, 12, 0);
         card.Controls.Add(UiKit.At(flight.Number, 18, 17, 8, true, UiKit.Blue));
         card.Controls.Add(UiKit.At($"{flight.Origin}  →  {flight.Destination}", 18, 42, 10, true));
         card.Controls.Add(UiKit.At(flight.Departure.ToString("dd MMM yyyy · HH:mm"), 18, 76, 9, false, UiKit.Muted));
         card.Controls.Add(UiKit.At($"Từ {UiKit.Money(flight.BasePrice)}", 18, 102, 10, true, UiKit.Blue));
         var bookButton = UiKit.Button("Chọn chuyến  →", primary: true, height: 34);
-        bookButton.Size = new Size(140, 34);
+        bookButton.Size = new Size(Math.Min(140, width - 36), 34);
         bookButton.Location = new Point(18, 125);
         bookButton.Font = new Font("Segoe UI", 8.5F, FontStyle.Bold);
         bookButton.Click += (_, _) => OpenSeatMap(flight);
@@ -402,12 +445,13 @@ internal sealed class FrmUserMain : Form
     private void OpenSeatMap(DemoFlight flight)
     {
         using var seatMap = new FrmSeatMap(_passenger, flight);
-        if (seatMap.ShowDialog(this) == DialogResult.OK)
+        if (seatMap.ShowDialog(this) == DialogResult.OK &&
+            seatMap.ConfirmedBooking is { } booking)
         {
             MessageBox.Show(
                 this,
-                "Đặt vé thành công. Bạn có thể xem vé trong mục “Vé của tôi”.",
-                "Đặt vé thành công ",
+                DemoData.FormatBookingReceipt(booking),
+                "Đặt vé thành công",
                 MessageBoxButtons.OK,
                 MessageBoxIcon.Information);
         }

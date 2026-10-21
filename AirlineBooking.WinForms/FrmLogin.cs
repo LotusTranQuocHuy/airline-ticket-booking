@@ -111,7 +111,7 @@ public sealed class FrmLogin : Form
             return;
         }
 
-        var passenger = new Passenger(Guid.NewGuid().ToString("N"), fullName, email);
+        var passenger = DemoData.GetOrCreatePassenger(fullName, email);
         Hide();
         using (var main = new FrmUserMain(passenger))
         {
