@@ -205,8 +205,8 @@ internal sealed class FrmUserMain : Form
             Color.FromArgb(177, 197, 220));
         _searchContent.Controls.Add(demoNote);
 
-        _origin.SelectedIndex = _origin.Items.IndexOf("TP. Hồ Chí Minh");
-        _destination.SelectedIndex = _destination.Items.IndexOf("Hà Nội");
+        _origin.SelectedIndex = _origin.Items.IndexOf(SampleData.HoChiMinh);
+        _destination.SelectedIndex = _destination.Items.IndexOf(SampleData.HaNoi);
         _departureDate.Value = DemoData.GetFlights()[0].Departure.Date;
         _returnDate.Value = DemoData.GetFlights()[0].Departure.Date.AddDays(4);
         _passengerAndClass.SelectedIndex = 0;

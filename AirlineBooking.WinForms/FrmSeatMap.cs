@@ -41,50 +41,16 @@ internal sealed class FrmSeatMap : Form
         seatCard.Controls.Add(UiKit.At("SƠ ĐỒ GHẾ", 22, 20, 9, true, UiKit.Blue));
         seatCard.Controls.Add(UiKit.At("Mũi máy bay  ↑", 260, 20, 9, false, UiKit.Muted));
 
-        var seatGrid = new TableLayoutPanel
+        // Sơ đồ ghế vẽ từ chính danh sách ghế của chuyến bay (SeatLayout.GetRows),
+        // nên dùng được cho mọi kiểu máy bay, kể cả chuyến do Admin tạo.
+        var seatGrid = new Panel
         {
             Location = new Point(28, 60),
             Size = new Size(470, 400),
-            ColumnCount = 5,
-            RowCount = 8,
+            AutoScroll = true,
             BackColor = Color.White
         };
-        seatGrid.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 25F));
-        seatGrid.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 25F));
-        seatGrid.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 56F));
-        seatGrid.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 25F));
-        seatGrid.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 25F));
-
-        for (var row = 0; row < 8; row++)
-        {
-            seatGrid.RowStyles.Add(new RowStyle(SizeType.Percent, 12.5F));
-            var seatClass = GetSeatClass(row);
-            var color = GetSeatColor(seatClass);
-            foreach (var (column, letter) in new[] { (0, 'A'), (1, 'B'), (3, 'C'), (4, 'D') })
-            {
-                var code = $"{row + 1}{letter}";
-                var seat = flight.Flight.GetSeat(code)
-                    ?? throw new InvalidOperationException($"Không tìm thấy ghế {code} trên chuyến {flight.Number}.");
-                var taken = !seat.IsAvailable();
-                var seatButton = new Button
-                {
-                    Text = code,
-                    Dock = DockStyle.Fill,
-                    Margin = new Padding(5),
-                    FlatStyle = FlatStyle.Flat,
-                    BackColor = taken ? Color.FromArgb(220, 225, 232) : color,
-                    ForeColor = taken ? Color.FromArgb(143, 151, 163) : UiKit.Navy,
-                    Enabled = !taken,
-                    Font = new Font("Segoe UI", 9F, FontStyle.Bold),
-                    Cursor = Cursors.Hand,
-                    UseVisualStyleBackColor = false
-                };
-                seatButton.FlatAppearance.BorderColor = Color.White;
-                seatButton.Click += (_, _) => SelectSeat(seat, seatButton, seatGrid);
-                _seatStyles[code] = (seat.GetSeatClass().GetName(), color);
-                seatGrid.Controls.Add(seatButton, column, row);
-            }
-        }
+        BuildSeatGrid(seatGrid, flight.Flight);
         seatCard.Controls.Add(seatGrid);
         seatCard.Controls.Add(UiKit.At("Ghế đã đặt", 28, 475, 9, false, UiKit.Muted));
 
@@ -134,13 +100,67 @@ internal sealed class FrmSeatMap : Form
         Controls.Add(root);
     }
 
-    private static string GetSeatClass(int row) => row switch
+    private const int SeatWidth = 56;
+    private const int SeatHeight = 38;
+    private const int SeatGap = 6;
+    private const int RowLabelWidth = 26;
+    private const int AisleWidth = 30;
+    private const int MaxSeatsPerSide = 3;
+    private const int GridLeft = 12;
+    private const int AisleStart = GridLeft + RowLabelWidth + MaxSeatsPerSide * (SeatWidth + SeatGap);
+    private const int RightSideStart = AisleStart + AisleWidth;
+
+    private void BuildSeatGrid(Panel seatGrid, Flight flight)
     {
-        0 => "First",
-        1 or 2 => "Business",
-        3 or 4 => "Premium Economy",
-        _ => "Economy"
-    };
+        var rows = SeatLayout.GetRows(flight);
+        for (var index = 0; index < rows.Count; index++)
+        {
+            var (rowNumber, seats) = rows[index];
+            var y = index * (SeatHeight + SeatGap);
+            seatGrid.Controls.Add(new Label
+            {
+                Text = rowNumber.ToString(),
+                Bounds = new Rectangle(GridLeft, y, RowLabelWidth, SeatHeight),
+                TextAlign = ContentAlignment.MiddleLeft,
+                ForeColor = UiKit.Muted,
+                Font = new Font("Segoe UI", 8.5F)
+            });
+
+            // Nửa trái sát lối đi, nửa phải bắt đầu ngay sau lối đi
+            var leftCount = (seats.Count + 1) / 2;
+            for (var i = 0; i < seats.Count; i++)
+            {
+                var x = i < leftCount
+                    ? AisleStart - (leftCount - i) * (SeatWidth + SeatGap)
+                    : RightSideStart + (i - leftCount) * (SeatWidth + SeatGap);
+                seatGrid.Controls.Add(CreateSeatButton(seats[i], new Point(x, y), seatGrid));
+            }
+        }
+    }
+
+    private Button CreateSeatButton(Seat seat, Point location, Panel seatGrid)
+    {
+        var code = seat.GetCode();
+        var color = GetSeatColor(seat.GetSeatClass().GetName());
+        var taken = !seat.IsAvailable();
+        var seatButton = new Button
+        {
+            Text = code,
+            Location = location,
+            Size = new Size(SeatWidth, SeatHeight),
+            FlatStyle = FlatStyle.Flat,
+            BackColor = taken ? Color.FromArgb(220, 225, 232) : color,
+            ForeColor = taken ? Color.FromArgb(143, 151, 163) : UiKit.Navy,
+            Enabled = !taken,
+            Font = new Font("Segoe UI", 9F, FontStyle.Bold),
+            Cursor = Cursors.Hand,
+            UseVisualStyleBackColor = false
+        };
+        seatButton.FlatAppearance.BorderColor = Color.White;
+        seatButton.Click += (_, _) => SelectSeat(seat, seatButton, seatGrid);
+        _seatStyles[code] = (seat.GetSeatClass().GetName(), color);
+        return seatButton;
+    }
 
     private static Color GetSeatColor(string seatClass) => seatClass switch
     {
@@ -161,7 +181,7 @@ internal sealed class FrmSeatMap : Form
         panel.Controls.Add(UiKit.At(seatClass, 49, y - 1, 9));
     }
 
-    private void SelectSeat(Seat seat, Button seatButton, TableLayoutPanel seatGrid)
+    private void SelectSeat(Seat seat, Button seatButton, Control seatGrid)
     {
         if (!seat.IsAvailable())
         {
@@ -192,7 +212,7 @@ internal sealed class FrmSeatMap : Form
         _continueButton.Enabled = true;
     }
 
-    private void ContinueToConfirmation(TableLayoutPanel seatGrid)
+    private void ContinueToConfirmation(Control seatGrid)
     {
         if (_selectedCode is null || _selectedSeatModel is null)
         {
@@ -212,7 +232,7 @@ internal sealed class FrmSeatMap : Form
         RefreshSeatAvailability(seatGrid);
     }
 
-    private void RefreshSeatAvailability(TableLayoutPanel seatGrid)
+    private void RefreshSeatAvailability(Control seatGrid)
     {
         foreach (var seatButton in seatGrid.Controls.OfType<Button>())
         {

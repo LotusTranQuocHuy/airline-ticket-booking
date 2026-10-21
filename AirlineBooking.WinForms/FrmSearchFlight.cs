@@ -129,8 +129,8 @@ internal sealed class FrmSearchFlight : Form
         root.Controls.Add(content, 0, 1);
         Controls.Add(root);
 
-        _origin.SelectedIndex = _origin.Items.IndexOf(origin ?? "TP. Hồ Chí Minh");
-        _destination.SelectedIndex = _destination.Items.IndexOf(destination ?? "Hà Nội");
+        _origin.SelectedIndex = _origin.Items.IndexOf(origin ?? SampleData.HoChiMinh);
+        _destination.SelectedIndex = _destination.Items.IndexOf(destination ?? SampleData.HaNoi);
         if (departureDate is { } selectedDate &&
             selectedDate.Date >= _date.MinDate.Date &&
             selectedDate.Date <= _date.MaxDate.Date)
