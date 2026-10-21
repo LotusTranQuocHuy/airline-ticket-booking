@@ -10,7 +10,10 @@ internal sealed class FrmSeatMap : Form
     private readonly Label _price = UiKit.Label("—", 16, true, UiKit.Blue);
     private readonly Button _continueButton = UiKit.Button("Tiếp tục  →", primary: true, height: 44);
     private readonly Dictionary<string, (string SeatClass, Color Color)> _seatStyles = [];
+    private Seat? _selectedSeatModel;
     private string? _selectedCode;
+
+    public Booking? ConfirmedBooking { get; private set; }
 
     public FrmSeatMap(Passenger passenger, DemoFlight flight)
     {
@@ -60,8 +63,9 @@ internal sealed class FrmSeatMap : Form
             foreach (var (column, letter) in new[] { (0, 'A'), (1, 'B'), (3, 'C'), (4, 'D') })
             {
                 var code = $"{row + 1}{letter}";
-                var taken = DemoData.IsSeatTaken(flight, code) ||
-                            (row, letter) is (1, 'D') or (4, 'C') or (6, 'A');
+                var seat = flight.Flight.GetSeat(code)
+                    ?? throw new InvalidOperationException($"Không tìm thấy ghế {code} trên chuyến {flight.Number}.");
+                var taken = !seat.IsAvailable();
                 var seatButton = new Button
                 {
                     Text = code,
@@ -76,8 +80,8 @@ internal sealed class FrmSeatMap : Form
                     UseVisualStyleBackColor = false
                 };
                 seatButton.FlatAppearance.BorderColor = Color.White;
-                seatButton.Click += (_, _) => SelectSeat(code, seatClass, seatButton, seatGrid);
-                _seatStyles[code] = (seatClass, color);
+                seatButton.Click += (_, _) => SelectSeat(seat, seatButton, seatGrid);
+                _seatStyles[code] = (seat.GetSeatClass().GetName(), color);
                 seatGrid.Controls.Add(seatButton, column, row);
             }
         }
@@ -94,15 +98,15 @@ internal sealed class FrmSeatMap : Form
         detailCard.Controls.Add(UiKit.At("Lựa chọn của bạn", 20, 226, 9, true, UiKit.Muted));
         _selectedSeat.Location = new Point(20, 254);
         detailCard.Controls.Add(_selectedSeat);
-        detailCard.Controls.Add(UiKit.At("Giá vé mẫu", 20, 293, 9, false, UiKit.Muted));
+        detailCard.Controls.Add(UiKit.At("Giá vé", 20, 293, 9, false, UiKit.Muted));
         _price.Location = new Point(20, 318);
         detailCard.Controls.Add(_price);
-        detailCard.Controls.Add(UiKit.At("Giá hiển thị dùng dữ liệu demo.", 20, 353, 8, false, UiKit.Muted));
+        detailCard.Controls.Add(UiKit.At("Giá tính theo hạng ghế.", 20, 353, 8, false, UiKit.Muted));
 
         _continueButton.Enabled = false;
         _continueButton.Width = 210;
         _continueButton.Location = new Point(20, 403);
-        _continueButton.Click += (_, _) => ContinueToConfirmation();
+        _continueButton.Click += (_, _) => ContinueToConfirmation(seatGrid);
         detailCard.Controls.Add(_continueButton);
         var backButton = UiKit.Button("←  Quay lại", height: 40);
         backButton.Width = 210;
@@ -157,45 +161,89 @@ internal sealed class FrmSeatMap : Form
         panel.Controls.Add(UiKit.At(seatClass, 49, y - 1, 9));
     }
 
-    private void SelectSeat(string code, string seatClass, Button seatButton, TableLayoutPanel seatGrid)
+    private void SelectSeat(Seat seat, Button seatButton, TableLayoutPanel seatGrid)
     {
+        if (!seat.IsAvailable())
+        {
+            seatButton.Enabled = false;
+            seatButton.BackColor = Color.FromArgb(220, 225, 232);
+            seatButton.ForeColor = Color.FromArgb(143, 151, 163);
+            MessageBox.Show(this, $"Ghế {seat.GetCode()} vừa được đặt. Hãy chọn ghế khác.",
+                "Ghế không còn trống", MessageBoxButtons.OK, MessageBoxIcon.Information);
+            return;
+        }
+
         if (_selectedCode is not null)
         {
             var previous = seatGrid.Controls.OfType<Button>()
                 .FirstOrDefault(button => button.Text == _selectedCode);
             if (previous is not null)
             {
-                previous.BackColor = _seatStyles[_selectedCode].Color;
-                previous.ForeColor = UiKit.Navy;
+                SetSeatAvailability(previous, _flight.Flight.GetSeat(_selectedCode)!);
             }
         }
 
-        _selectedCode = code;
+        _selectedCode = seat.GetCode();
+        _selectedSeatModel = seat;
         seatButton.BackColor = UiKit.Blue;
         seatButton.ForeColor = Color.White;
-        _selectedSeat.Text = $"{code}  ·  {seatClass}";
-        _price.Text = UiKit.Money(_flight.GetPrice(seatClass));
+        _selectedSeat.Text = $"{seat.GetCode()}  ·  {seat.GetSeatClass().GetName()}";
+        _price.Text = UiKit.Money(seat.GetSeatClass().CalculatePrice(seat.GetPrice()));
         _continueButton.Enabled = true;
     }
 
-    private void ContinueToConfirmation()
+    private void ContinueToConfirmation(TableLayoutPanel seatGrid)
     {
-        if (_selectedCode is null)
+        if (_selectedCode is null || _selectedSeatModel is null)
         {
             return;
         }
 
-        var seatClass = _seatStyles[_selectedCode].SeatClass;
-        using var confirmation = new FrmBookingConfirm(
-            _passenger,
-            _flight,
-            _selectedCode,
-            seatClass,
-            _flight.GetPrice(seatClass));
-        if (confirmation.ShowDialog(this) == DialogResult.OK)
+        using var confirmation = new FrmBookingConfirm(_passenger, _flight, _selectedSeatModel);
+        if (confirmation.ShowDialog(this) == DialogResult.OK &&
+            confirmation.ConfirmedBooking is { } booking)
         {
+            ConfirmedBooking = booking;
             DialogResult = DialogResult.OK;
             Close();
+            return;
         }
+
+        RefreshSeatAvailability(seatGrid);
+    }
+
+    private void RefreshSeatAvailability(TableLayoutPanel seatGrid)
+    {
+        foreach (var seatButton in seatGrid.Controls.OfType<Button>())
+        {
+            var seat = _flight.Flight.GetSeat(seatButton.Text);
+            if (seat is not null)
+            {
+                SetSeatAvailability(seatButton, seat);
+            }
+        }
+
+        if (_selectedSeatModel is null || _selectedSeatModel.IsAvailable())
+        {
+            return;
+        }
+
+        _selectedCode = null;
+        _selectedSeatModel = null;
+        _selectedSeat.Text = "Ghế vừa được đặt";
+        _price.Text = "—";
+        _continueButton.Enabled = false;
+    }
+
+    private void SetSeatAvailability(Button seatButton, Seat seat)
+    {
+        var available = seat.IsAvailable();
+        seatButton.Enabled = available;
+        seatButton.BackColor = available
+            ? _seatStyles[seat.GetCode()].Color
+            : Color.FromArgb(220, 225, 232);
+        seatButton.ForeColor = available
+            ? UiKit.Navy
+            : Color.FromArgb(143, 151, 163);
     }
 }

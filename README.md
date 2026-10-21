@@ -1,6 +1,7 @@
 # Airline Ticket Booking System
 
-OOP Final Project — hệ thống đặt vé máy bay: tìm chuyến bay, chọn/khóa ghế theo hạng, hủy vé và hoàn tiền theo hạng ghế và thời gian còn lại trước giờ bay.
+OOP Final Project — hệ thống đặt vé máy bay: tìm chuyến bay, chọn/khóa ghế theo hạng, hủy vé và hoàn tiền theo hạng ghế và thời gian còn lại trước giờ bay, hoặc chuyển vé sang hành khách khác.
+Ứng dụng hiện dùng các chuyến bay mẫu; vé, trạng thái ghế và danh tính hành khách được lưu trong bộ nhớ trong thời gian ứng dụng chạy.
 
 ## Cấu trúc solution
 
@@ -8,6 +9,7 @@ OOP Final Project — hệ thống đặt vé máy bay: tìm chuyến bay, chọ
 |---|---|---|
 | `AirlineBooking.Core` | Class Library (.NET 8) | Toàn bộ logic nghiệp vụ, không phụ thuộc giao diện |
 | `AirlineBooking.WinForms` | Windows Forms App (.NET 8) | Giao diện, chỉ gọi vào `BookingService` / `FlightCatalog` |
+| `AirlineBooking.Core.Tests` | xUnit (.NET 8) | Kiểm thử tìm chuyến, đặt/hủy, giữ ghế và hoàn tiền |
 
 ```
 AirlineBooking.Core/
@@ -22,6 +24,7 @@ AirlineBooking.WinForms/
 └── Admin/                FrmAdminMain, FrmFlightManager, FrmFlightEdit, FrmBookingManager, FrmRevenueReport,
                           AdminTheme, AdminDemoData, Controls/ (CardPanel, MenuCard, BarChart, SeatLabel)
 docs/                     Class diagram (ảnh + file Enterprise Architect), kế hoạch thực hiện, AI Usage Log
+AirlineBooking.Core.Tests/ Kiểm thử tự động luồng đặt vé
 ```
 
 ## Class diagram
@@ -44,6 +47,12 @@ dotnet build AirlineBooking.sln
 
 ```bash
 dotnet run --project AirlineBooking.WinForms
+```
+
+Chạy kiểm thử tự động:
+
+```bash
+dotnet test AirlineBooking.Core.Tests\AirlineBooking.Core.Tests.csproj
 ```
 
 Hoặc mở `AirlineBooking.sln` bằng Visual Studio, chọn `AirlineBooking.WinForms` làm Startup Project và nhấn F5.

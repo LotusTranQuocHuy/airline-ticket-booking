@@ -29,10 +29,23 @@ public class Flight
 
     public IReadOnlyList<Seat> GetSeats() => _seats.AsReadOnly();
 
-    public Seat? GetSeat(string code) => _seats.FirstOrDefault(s => s.GetCode() == code);
+    public Seat? GetSeat(string code) =>
+        _seats.FirstOrDefault(s => string.Equals(s.GetCode(), code, StringComparison.OrdinalIgnoreCase));
 
     public void AddSeat(string seatCode, ISeatClass seatClass, decimal price)
     {
+        ArgumentException.ThrowIfNullOrWhiteSpace(seatCode);
+        ArgumentNullException.ThrowIfNull(seatClass);
+        if (price <= 0)
+        {
+            throw new ArgumentOutOfRangeException(nameof(price), "Giá ghế phải lớn hơn 0.");
+        }
+
+        if (_seats.Any(seat => string.Equals(seat.GetCode(), seatCode, StringComparison.OrdinalIgnoreCase)))
+        {
+            throw new ArgumentException($"Ghế {seatCode} đã tồn tại trên chuyến bay {_flightNumber}.", nameof(seatCode));
+        }
+
         _seats.Add(new Seat(seatCode, seatClass, price));
     }
 

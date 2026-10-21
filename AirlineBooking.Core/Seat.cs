@@ -25,41 +25,107 @@ public class Seat
 
     public ISeatClass GetSeatClass() => _seatClass;
 
-    public decimal GetPrice() { lock (_sync) return _price; }
-    public SeatStatus GetStatus() => _status;
-
-    public bool IsAvailable() => _status == SeatStatus.Available;
-
-    public bool TryLock(Passenger p)
+    public decimal GetPrice()
     {
-        // TODO (tuần 3): lock (_sync) { nếu Available thì chuyển sang Locked, gán _holder = p, trả về true; ngược lại trả về false }
-        throw new NotImplementedException();
+        lock (_sync)
+        {
+            return _price;
+        }
     }
 
-    public void Confirm(Passenger p)
+    public SeatStatus GetStatus()
     {
-        // TODO (tuần 3): lock (_sync) { chỉ khi Locked và _holder == p thì chuyển sang Booked }
-        throw new NotImplementedException();
+        lock (_sync)
+        {
+            return _status;
+        }
     }
 
-    public void Release()
+    public bool IsAvailable()
     {
-        // TODO (tuần 3): lock (_sync) { chuyển về Available, _holder = null }
-        throw new NotImplementedException();
+        lock (_sync)
+        {
+            return _status == SeatStatus.Available;
+        }
+    }
+
+    public bool TryLock(Passenger passenger)
+    {
+        ArgumentNullException.ThrowIfNull(passenger);
+        lock (_sync)
+        {
+            if (_status != SeatStatus.Available)
+            {
+                return false;
+            }
+
+            _status = SeatStatus.Locked;
+            _holder = passenger;
+            return true;
+        }
+    }
+
+    public void Confirm(Passenger passenger)
+    {
+        ArgumentNullException.ThrowIfNull(passenger);
+        lock (_sync)
+        {
+            if (_status != SeatStatus.Locked || !IsHeldBy(passenger))
+            {
+                throw new InvalidBookingStateException(
+                    $"Không thể xác nhận ghế {_seatCode} vì ghế không được giữ bởi hành khách này.");
+            }
+
+            _status = SeatStatus.Booked;
+        }
+    }
+
+    internal void Release(Passenger passenger)
+    {
+        ArgumentNullException.ThrowIfNull(passenger);
+        lock (_sync)
+        {
+            if ((_status != SeatStatus.Locked && _status != SeatStatus.Booked) || !IsHeldBy(passenger))
+            {
+                throw new InvalidBookingStateException(
+                    $"Không thể giải phóng ghế {_seatCode} vì ghế không thuộc đặt chỗ này.");
+            }
+
+            _status = SeatStatus.Available;
+            _holder = null;
+        }
+    }
+
+    internal void TransferTo(Passenger currentPassenger, Passenger newPassenger)
+    {
+        ArgumentNullException.ThrowIfNull(currentPassenger);
+        ArgumentNullException.ThrowIfNull(newPassenger);
+        lock (_sync)
+        {
+            if (_status != SeatStatus.Booked || !IsHeldBy(currentPassenger))
+            {
+                throw new InvalidBookingStateException(
+                    $"Không thể chuyển ghế {_seatCode} vì vé không còn thuộc hành khách hiện tại.");
+            }
+
+            _holder = newPassenger;
+        }
     }
 
     internal void ChangePrice(decimal newPrice)
     {
-        // TODO (tuần 3): chỉ Flight.UpdatePrice được gọi; kiểm tra newPrice > 0
-
         if (newPrice <= 0)
         {
-            throw new ArgumentOutOfRangeException(nameof(newPrice), "Giá vé phải lớn hơn 0.");
+            throw new ArgumentOutOfRangeException(nameof(newPrice), "Giá ghế phải lớn hơn 0.");
         }
+
         lock (_sync)
         {
             _price = newPrice;
         }
-
     }
+
+    private bool IsHeldBy(Passenger passenger) =>
+        _holder is not null &&
+        string.Equals(_holder.GetId(), passenger.GetId(), StringComparison.Ordinal);
 }
