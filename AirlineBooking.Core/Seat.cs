@@ -25,8 +25,7 @@ public class Seat
 
     public ISeatClass GetSeatClass() => _seatClass;
 
-    public decimal GetPrice() => _price;
-
+    public decimal GetPrice() { lock (_sync) return _price; }
     public SeatStatus GetStatus() => _status;
 
     public bool IsAvailable() => _status == SeatStatus.Available;
@@ -52,6 +51,15 @@ public class Seat
     internal void ChangePrice(decimal newPrice)
     {
         // TODO (tuần 3): chỉ Flight.UpdatePrice được gọi; kiểm tra newPrice > 0
-        throw new NotImplementedException();
+
+        if (newPrice <= 0)
+        {
+            throw new ArgumentOutOfRangeException(nameof(newPrice), "Giá vé phải lớn hơn 0.");
+        }
+        lock (_sync)
+        {
+            _price = newPrice;
+        }
+
     }
 }

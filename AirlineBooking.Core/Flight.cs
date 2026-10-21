@@ -36,15 +36,36 @@ public class Flight
         _seats.Add(new Seat(seatCode, seatClass, price));
     }
 
-    public void Reschedule(DateTime newDeparture)
+    public void Reschedule(DateTime newDeparture, DateTime now)
     {
+
         // TODO (tuần 3): đổi _departure
-        throw new NotImplementedException();
+        if (_departure <= now)
+            throw new InvalidOperationException($"Chuyến {_flightNumber} đã cất cánh, không thể đổi giờ.");
+        if (newDeparture <= now)
+            throw new ArgumentException("Giờ bay mới phải sau thời điểm hiện tại.", nameof(newDeparture));
+
+        _departure = newDeparture;
     }
 
     public void UpdatePrice(string seatClassName, decimal newPrice)
     {
         // TODO (tuần 3): gọi ChangePrice cho mọi ghế có GetSeatClass().GetName() == seatClassName
-        throw new NotImplementedException();
+        var seatsOfClass = new List<Seat>();
+        foreach (Seat seat in _seats)
+        {
+            if (seat.GetSeatClass().GetName() == seatClassName)
+            {
+                seatsOfClass.Add(seat);
+            }
+        }
+
+        if (seatsOfClass.Count == 0)
+            throw new ArgumentException($"Chuyến {_flightNumber} không có ghế hạng {seatClassName}.", nameof(seatClassName));
+
+        foreach (var seat in seatsOfClass)
+        {
+            seat.ChangePrice(newPrice);
+        }
     }
 }

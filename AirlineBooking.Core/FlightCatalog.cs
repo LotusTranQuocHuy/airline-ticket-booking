@@ -19,4 +19,13 @@ public class FlightCatalog
         // TODO (tuần 3): lọc theo điểm đi, điểm đến và ngày bay (DateOnly.FromDateTime(GetDeparture()))
         throw new NotImplementedException();
     }
+    public void Remove(Flight flight)
+    {
+        foreach (Seat seat in flight.GetSeats())
+        {
+            if (!seat.IsAvailable())
+                throw new InvalidOperationException($"Chuyến {flight.GetFlightNumber()} đã có vé đặt, không thể xóa.");
+        }
+        _flights.Remove(flight);
+    }
 }

@@ -41,7 +41,19 @@ public class Booking
         // TODO (tuần 3): nếu đã Cancelled hoặc chuyến đã bay thì ném InvalidBookingStateException;
         // phí = _paidAmount * CancellationFeeRate(GetDeparture() - now); _refundAmount = _paidAmount - phí;
         // _status = Cancelled; _cancelledAt = now; _seat.Release(); return _refundAmount;
-        throw new NotImplementedException();
+        if (_status == BookingStatus.Cancelled)
+            throw new InvalidBookingStateException($"Vé {_bookingId} đã được hủy trước đó.");
+
+        TimeSpan timeLeft = _flight.GetDeparture() - now;
+        if (timeLeft <= TimeSpan.Zero)
+            throw new InvalidBookingStateException($"Chuyến {_flight.GetFlightNumber()} đã cất cánh, không thể hủy vé.");
+
+        decimal feeRate = _seat.GetSeatClass().CancellationFeeRate(timeLeft);   // đa hình
+        _refundAmount = _paidAmount - _paidAmount * feeRate;
+        _status = BookingStatus.Cancelled;
+        _cancelledAt = now;
+        _seat.Release();
+        return _refundAmount;
     }
 
     public string GetBookingId() => _bookingId;
