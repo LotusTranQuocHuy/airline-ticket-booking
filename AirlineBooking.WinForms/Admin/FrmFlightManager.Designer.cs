@@ -43,10 +43,14 @@ namespace AirlineBooking.WinForms.Admin
             numBasePrice = new NumericUpDown();
             sepSeats = new Label();
             lblSeatSection = new Label();
+            lblFirstRows = new Label();
+            numFirstRows = new NumericUpDown();
             lblBusinessRows = new Label();
             numBusinessRows = new NumericUpDown();
             lblEconomyRows = new Label();
             numEconomyRows = new NumericUpDown();
+            lblPremiumRows = new Label();
+            numPremiumRows = new NumericUpDown();
             lblSeatPreview = new Label();
             btnAddFlight = new Button();
             btnReset = new Button();
@@ -68,7 +72,9 @@ namespace AirlineBooking.WinForms.Admin
             tlpMain.SuspendLayout();
             pnlAddFlight.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)numBasePrice).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)numFirstRows).BeginInit();
             ((System.ComponentModel.ISupportInitialize)numBusinessRows).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)numPremiumRows).BeginInit();
             ((System.ComponentModel.ISupportInitialize)numEconomyRows).BeginInit();
             pnlList.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)dgvFlights).BeginInit();
@@ -108,8 +114,12 @@ namespace AirlineBooking.WinForms.Admin
             pnlAddFlight.Controls.Add(numBasePrice);
             pnlAddFlight.Controls.Add(sepSeats);
             pnlAddFlight.Controls.Add(lblSeatSection);
+            pnlAddFlight.Controls.Add(lblFirstRows);
+            pnlAddFlight.Controls.Add(numFirstRows);
             pnlAddFlight.Controls.Add(lblBusinessRows);
             pnlAddFlight.Controls.Add(numBusinessRows);
+            pnlAddFlight.Controls.Add(lblPremiumRows);
+            pnlAddFlight.Controls.Add(numPremiumRows);
             pnlAddFlight.Controls.Add(lblEconomyRows);
             pnlAddFlight.Controls.Add(numEconomyRows);
             pnlAddFlight.Controls.Add(lblSeatPreview);
@@ -242,10 +252,28 @@ namespace AirlineBooking.WinForms.Admin
             lblSeatSection.TabIndex = 12;
             lblSeatSection.Text = "Số hàng ghế mỗi hạng";
             // 
+            // lblFirstRows
+            // 
+            lblFirstRows.AutoSize = true;
+            lblFirstRows.Location = new Point(14, 330);
+            lblFirstRows.Name = "lblFirstRows";
+            lblFirstRows.TabIndex = 24;
+            lblFirstRows.Text = "First (4 ghế/hàng)";
+            // 
+            // numFirstRows
+            // 
+            numFirstRows.Location = new Point(204, 326);
+            numFirstRows.Maximum = new decimal(new int[] { 60, 0, 0, 0 });
+            numFirstRows.Name = "numFirstRows";
+            numFirstRows.Size = new Size(110, 25);
+            numFirstRows.TabIndex = 25;
+            numFirstRows.Value = new decimal(new int[] { 1, 0, 0, 0 });
+            numFirstRows.ValueChanged += SeatRows_ValueChanged;
+            // 
             // lblBusinessRows
             // 
             lblBusinessRows.AutoSize = true;
-            lblBusinessRows.Location = new Point(14, 330);
+            lblBusinessRows.Location = new Point(14, 366);
             lblBusinessRows.Name = "lblBusinessRows";
             lblBusinessRows.Size = new Size(136, 17);
             lblBusinessRows.TabIndex = 13;
@@ -253,18 +281,36 @@ namespace AirlineBooking.WinForms.Admin
             // 
             // numBusinessRows
             // 
-            numBusinessRows.Location = new Point(204, 326);
+            numBusinessRows.Location = new Point(204, 362);
             numBusinessRows.Maximum = new decimal(new int[] { 60, 0, 0, 0 });
             numBusinessRows.Name = "numBusinessRows";
             numBusinessRows.Size = new Size(110, 25);
             numBusinessRows.TabIndex = 14;
-            numBusinessRows.Value = new decimal(new int[] { 3, 0, 0, 0 });
+            numBusinessRows.Value = new decimal(new int[] { 2, 0, 0, 0 });
             numBusinessRows.ValueChanged += SeatRows_ValueChanged;
+            // 
+            // lblPremiumRows
+            // 
+            lblPremiumRows.AutoSize = true;
+            lblPremiumRows.Location = new Point(14, 402);
+            lblPremiumRows.Name = "lblPremiumRows";
+            lblPremiumRows.TabIndex = 26;
+            lblPremiumRows.Text = "Premium (4 ghế/hàng)";
+            // 
+            // numPremiumRows
+            // 
+            numPremiumRows.Location = new Point(204, 398);
+            numPremiumRows.Maximum = new decimal(new int[] { 60, 0, 0, 0 });
+            numPremiumRows.Name = "numPremiumRows";
+            numPremiumRows.Size = new Size(110, 25);
+            numPremiumRows.TabIndex = 27;
+            numPremiumRows.Value = new decimal(new int[] { 2, 0, 0, 0 });
+            numPremiumRows.ValueChanged += SeatRows_ValueChanged;
             // 
             // lblEconomyRows
             // 
             lblEconomyRows.AutoSize = true;
-            lblEconomyRows.Location = new Point(14, 366);
+            lblEconomyRows.Location = new Point(14, 438);
             lblEconomyRows.Name = "lblEconomyRows";
             lblEconomyRows.Size = new Size(140, 17);
             lblEconomyRows.TabIndex = 15;
@@ -272,7 +318,7 @@ namespace AirlineBooking.WinForms.Admin
             // 
             // numEconomyRows
             // 
-            numEconomyRows.Location = new Point(204, 362);
+            numEconomyRows.Location = new Point(204, 434);
             numEconomyRows.Maximum = new decimal(new int[] { 60, 0, 0, 0 });
             numEconomyRows.Name = "numEconomyRows";
             numEconomyRows.Size = new Size(110, 25);
@@ -283,11 +329,11 @@ namespace AirlineBooking.WinForms.Admin
             // lblSeatPreview
             // 
             lblSeatPreview.ForeColor = Color.FromArgb(106, 120, 141);
-            lblSeatPreview.Location = new Point(14, 400);
+            lblSeatPreview.Location = new Point(14, 474);
             lblSeatPreview.Name = "lblSeatPreview";
-            lblSeatPreview.Size = new Size(300, 40);
+            lblSeatPreview.Size = new Size(290, 40);
             lblSeatPreview.TabIndex = 17;
-            lblSeatPreview.Text = "Hệ thống sẽ sinh 132 ghế (12 Business + 120 Economy)";
+            lblSeatPreview.Text = "Sẽ sinh 140 ghế: 20 hạng cao + 120 Economy";
             // 
             // btnAddFlight
             // 
@@ -451,7 +497,9 @@ namespace AirlineBooking.WinForms.Admin
             pnlAddFlight.ResumeLayout(false);
             pnlAddFlight.PerformLayout();
             ((System.ComponentModel.ISupportInitialize)numBasePrice).EndInit();
+            ((System.ComponentModel.ISupportInitialize)numFirstRows).EndInit();
             ((System.ComponentModel.ISupportInitialize)numBusinessRows).EndInit();
+            ((System.ComponentModel.ISupportInitialize)numPremiumRows).EndInit();
             ((System.ComponentModel.ISupportInitialize)numEconomyRows).EndInit();
             pnlList.ResumeLayout(false);
             pnlList.PerformLayout();
@@ -479,10 +527,14 @@ namespace AirlineBooking.WinForms.Admin
         private NumericUpDown numBasePrice;
         private Label sepSeats;
         private Label lblSeatSection;
+        private Label lblFirstRows;
+        private NumericUpDown numFirstRows;
         private Label lblBusinessRows;
         private NumericUpDown numBusinessRows;
         private Label lblEconomyRows;
         private NumericUpDown numEconomyRows;
+        private Label lblPremiumRows;
+        private NumericUpDown numPremiumRows;
         private Label lblSeatPreview;
         private Button btnAddFlight;
         private Button btnReset;

@@ -18,8 +18,8 @@ public partial class FrmAdminMain : Form
 
     private void RefreshStatus()
     {
-        lblOpenFlights.Text = $"Chuyến đang mở bán: {AdminDemoData.Flights.Count(f => !f.HasDeparted)}";
-        lblTodayBookings.Text = $"Vé hôm nay: {AdminDemoData.Bookings.Count(b => b.BookedAt.Date == DateTime.Today)}";
+        lblOpenFlights.Text = $"Chuyến đang mở bán: {AdminDisplay.CountOpenFlights()}";
+        lblTodayBookings.Text = $"Vé hôm nay: {AdminDisplay.CountBookingsToday()}";
     }
 
     private void OpenDialog(Form form)

@@ -92,23 +92,30 @@ public static class AdminTheme
 
         grid.ColumnHeadersBorderStyle = DataGridViewHeaderBorderStyle.Single;
         grid.ColumnHeadersHeightSizeMode = DataGridViewColumnHeadersHeightSizeMode.DisableResizing;
-        grid.ColumnHeadersHeight = 30;
         grid.ColumnHeadersDefaultCellStyle.BackColor = FormBack;
         grid.ColumnHeadersDefaultCellStyle.SelectionBackColor = FormBack;
         grid.ColumnHeadersDefaultCellStyle.ForeColor = Text;
         grid.ColumnHeadersDefaultCellStyle.Font = BodyBoldFont;
         grid.ColumnHeadersDefaultCellStyle.Padding = new Padding(4, 0, 4, 0);
 
-        grid.RowTemplate.Height = 28;
         grid.DefaultCellStyle.ForeColor = Text;
         grid.DefaultCellStyle.SelectionBackColor = Selection;
         grid.DefaultCellStyle.SelectionForeColor = Text;
         grid.DefaultCellStyle.Padding = new Padding(4, 0, 4, 0);
         grid.AlternatingRowsDefaultCellStyle.BackColor = AlternateRow;
 
+        // Màn hình phóng to chữ (125%, 150%) thì độ rộng cột và chiều cao dòng cũng phải phóng theo,
+        // nếu không tiêu đề cột và chữ trong ô sẽ bị cắt.
+        float scale = grid.DeviceDpi / 96f;
+        grid.ColumnHeadersHeight = (int)(30 * scale);
+        grid.RowTemplate.Height = (int)(28 * scale);
         foreach (DataGridViewColumn column in grid.Columns)
         {
             column.SortMode = DataGridViewColumnSortMode.NotSortable;
+            if (column.AutoSizeMode != DataGridViewAutoSizeColumnMode.Fill)
+            {
+                column.Width = (int)(column.Width * scale);
+            }
         }
     }
 

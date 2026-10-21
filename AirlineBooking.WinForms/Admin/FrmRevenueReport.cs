@@ -18,6 +18,8 @@ public partial class FrmRevenueReport : Form
         AdminTheme.StyleSecondaryButton(btnBack);
         AdminTheme.StyleGrid(dgvByFlight);
         AdminTheme.StyleGrid(dgvByClass);
+        // Đủ chỗ cho 4 hạng ghế mà không cần thanh cuộn (kể cả khi màn hình phóng to chữ)
+        dgvByClass.Height = dgvByClass.ColumnHeadersHeight + 4 * dgvByClass.RowTemplate.Height + 2;
         AdminTheme.AlignRight(colFlightTickets, colFlightPaid, colFlightRefunded, colFlightNet,
                               colClassTickets, colClassNet);
 
@@ -44,20 +46,20 @@ public partial class FrmRevenueReport : Form
             return;
         }
 
-        // Tuần 3: thay AdminDemoData bằng RevenueReportService trong Core (cùng tên phương thức).
-        decimal paid = AdminDemoData.GetTotalPaid(from, to);
-        decimal refunded = AdminDemoData.GetTotalRefunded(from, to);
+
+        decimal paid = AppServices.Revenue.GetTotalPaid(from, to);
+        decimal refunded = AppServices.Revenue.GetTotalRefunded(from, to);
         lblPaidValue.Text = AdminTheme.Money(paid);
         lblRefundedValue.Text = AdminTheme.Money(refunded);
         lblNetValue.Text = AdminTheme.Money(paid - refunded);
 
-        _byFlight = AdminDemoData.GetRevenueByFlight(from, to);
+        _byFlight = AppServices.Revenue.GetRevenueByFlight(from, to);
         dgvByFlight.Rows.Clear();
         foreach (var line in _byFlight)
         {
             dgvByFlight.Rows.Add(
                 line.GetLabel(),
-                AdminDemoData.FindFlight(line.GetLabel())?.Route ?? "",
+                AdminDisplay.RouteOf(line.GetLabel()),
                 line.GetTicketCount(),
                 AdminTheme.Number(line.GetTotalPaid()),
                 AdminTheme.Number(line.GetTotalRefunded()),
@@ -65,7 +67,7 @@ public partial class FrmRevenueReport : Form
         }
 
         dgvByClass.Rows.Clear();
-        foreach (var line in AdminDemoData.GetRevenueBySeatClass(from, to))
+        foreach (var line in AppServices.Revenue.GetRevenueBySeatClass(from, to))
         {
             dgvByClass.Rows.Add(line.GetLabel(), line.GetTicketCount(), AdminTheme.Number(line.GetNetRevenue()));
         }
@@ -97,7 +99,7 @@ public partial class FrmRevenueReport : Form
         {
             csv.AppendLine(string.Join(",",
                 line.GetLabel(),
-                AdminDemoData.FindFlight(line.GetLabel())?.Route ?? "",
+                AdminDisplay.RouteOf(line.GetLabel()),
                 line.GetTicketCount(),
                 line.GetTotalPaid().ToString(CultureInfo.InvariantCulture),
                 line.GetTotalRefunded().ToString(CultureInfo.InvariantCulture),

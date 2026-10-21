@@ -1,3 +1,5 @@
+using AirlineBooking.Core;
+
 namespace AirlineBooking.WinForms.Admin;
 
 public partial class FrmFlightManager : Form
@@ -13,13 +15,13 @@ public partial class FrmFlightManager : Form
         AdminTheme.StyleGrid(dgvFlights);
         AdminTheme.AlignRight(colBasePrice, colBooked);
 
-        cboFrom.Items.AddRange(AdminDemoData.Airports);
-        cboTo.Items.AddRange(AdminDemoData.Airports);
+        cboFrom.Items.AddRange(SampleData.Airports);
+        cboTo.Items.AddRange(SampleData.Airports);
         ResetInputs();
         LoadFlights();
     }
 
-    private FlightRow? SelectedFlight => dgvFlights.CurrentRow?.Tag as FlightRow;
+    private Flight? SelectedFlight => dgvFlights.CurrentRow?.Tag as Flight;
 
     private void ResetInputs()
     {
@@ -28,37 +30,41 @@ public partial class FrmFlightManager : Form
         cboTo.SelectedIndex = 1;
         dtpDeparture.Value = DateTime.Today.AddDays(7).AddHours(9);
         numBasePrice.Value = 1_450_000;
-        numBusinessRows.Value = 3;
+        numFirstRows.Value = 1;
+        numBusinessRows.Value = 2;
+        numPremiumRows.Value = 2;
         numEconomyRows.Value = 20;
         UpdateSeatPreview();
     }
 
     private void UpdateSeatPreview()
     {
-        int business = (int)numBusinessRows.Value * FlightRow.BusinessSeatsPerRow;
-        int economy = (int)numEconomyRows.Value * FlightRow.EconomySeatsPerRow;
-        lblSeatPreview.Text = $"Hệ thống sẽ sinh {business + economy} ghế ({business} Business + {economy} Economy)";
+        int wide = (int)(numFirstRows.Value + numBusinessRows.Value + numPremiumRows.Value) * SeatLayout.WideSeatsPerRow;
+        int economy = (int)numEconomyRows.Value * SeatLayout.EconomySeatsPerRow;
+        lblSeatPreview.Text = $"Sẽ sinh {wide + economy} ghế: {wide} hạng cao + {economy} Economy";
     }
 
     private void LoadFlights(string? selectCode = null)
     {
-        selectCode ??= SelectedFlight?.Code;
+        selectCode ??= SelectedFlight?.GetFlightNumber();
         string keyword = txtSearch.Text.Trim();
 
         dgvFlights.Rows.Clear();
-        foreach (var flight in AdminDemoData.Flights.Where(f => Matches(f, keyword)))
+        foreach (Flight flight in AppServices.Catalog.GetAll())
         {
+            if (!Matches(flight, keyword)) continue;
+
             int index = dgvFlights.Rows.Add(
-                flight.Code,
-                flight.From,
-                flight.To,
-                AdminTheme.DateTimeText(flight.Departure),
-                AdminTheme.Number(flight.BasePrice),
-                $"{AdminDemoData.CountBooked(flight.Code)}/{flight.TotalSeats}",
-                flight.StatusText);
+                flight.GetFlightNumber(),
+                flight.GetOrigin(),
+                flight.GetDestination(),
+                AdminTheme.DateTimeText(flight.GetDeparture()),
+                AdminTheme.Number(SeatLayout.GetBasePrice(flight)),
+                $"{AdminDisplay.BookedCount(flight)}/{flight.GetSeats().Count}",
+                AdminDisplay.StatusText(flight));
             var row = dgvFlights.Rows[index];
             row.Tag = flight;
-            if (flight.Code == selectCode)
+            if (flight.GetFlightNumber() == selectCode)
             {
                 dgvFlights.CurrentCell = row.Cells[0];
             }
@@ -66,14 +72,14 @@ public partial class FrmFlightManager : Form
         UpdateStatus();
     }
 
-    private static bool Matches(FlightRow flight, string keyword) =>
+    private static bool Matches(Flight flight, string keyword) =>
         keyword.Length == 0 ||
-        flight.Code.Contains(keyword, StringComparison.CurrentCultureIgnoreCase) ||
-        flight.From.Contains(keyword, StringComparison.CurrentCultureIgnoreCase) ||
-        flight.To.Contains(keyword, StringComparison.CurrentCultureIgnoreCase);
+    flight.GetFlightNumber().Contains(keyword, StringComparison.CurrentCultureIgnoreCase) ||
+    flight.GetOrigin().Contains(keyword, StringComparison.CurrentCultureIgnoreCase) ||
+    flight.GetDestination().Contains(keyword, StringComparison.CurrentCultureIgnoreCase);
 
     private void UpdateStatus() =>
-        lblStatus.Text = $"{dgvFlights.Rows.Count} chuyến bay · Đang chọn: {SelectedFlight?.Code ?? "—"}";
+        lblStatus.Text = $"{dgvFlights.Rows.Count} chuyến bay · Đang chọn: {SelectedFlight?.GetFlightNumber() ?? "—"}";
 
     private void btnAddFlight_Click(object? sender, EventArgs e)
     {
@@ -83,13 +89,14 @@ public partial class FrmFlightManager : Form
         DateTime departure = AdminTheme.TrimSeconds(dtpDeparture.Value);
         int businessRows = (int)numBusinessRows.Value;
         int economyRows = (int)numEconomyRows.Value;
+        int firstRows = (int)numFirstRows.Value;
+        int premiumRows = (int)numPremiumRows.Value;
 
         string? error =
             code.Length == 0 ? "Vui lòng nhập số hiệu chuyến." :
-            AdminDemoData.FindFlight(code) is not null ? $"Số hiệu {code} đã tồn tại." :
             from == to ? "Điểm đi và điểm đến phải khác nhau." :
-            departure <= DateTime.Now ? "Giờ bay phải ở thời điểm sau hiện tại." :
-            businessRows + economyRows == 0 ? "Chuyến bay phải có ít nhất một hàng ghế." :
+            departure <= AppServices.Now ? "Giờ bay phải ở thời điểm sau hiện tại." :
+            firstRows + businessRows + premiumRows + economyRows == 0 ? "Chuyến bay phải có ít nhất một hàng ghế." :
             null;
         if (error is not null)
         {
@@ -97,12 +104,21 @@ public partial class FrmFlightManager : Form
             return;
         }
 
-        // Tuần 3: tạo Flight trong Core, gọi AddSeat cho từng ghế rồi FlightCatalog.Add(...)
-        var flight = new FlightRow(code, from, to, departure, numBasePrice.Value, businessRows, economyRows);
-        AdminDemoData.AddFlight(flight);
+        var flight = new Flight(code, from, to, departure);
+        SeatLayout.AddSeats(flight, firstRows, businessRows, premiumRows, economyRows, numBasePrice.Value);
+        try
+        {
+            AppServices.Catalog.Add(flight);
+        }
+        catch (ArgumentException ex)       // ví dụ: trùng số hiệu chuyến
+        {
+            AdminTheme.Warn(this, ex.Message);
+            return;
+        }
+
         txtSearch.Clear();
         LoadFlights(code);
-        MessageBox.Show(this, $"Đã thêm chuyến {code} với {flight.TotalSeats} ghế.", "Thêm chuyến bay",
+        MessageBox.Show(this, $"Đã thêm chuyến {code} với {flight.GetSeats().Count} ghế.", "Thêm chuyến bay",
             MessageBoxButtons.OK, MessageBoxIcon.Information);
         ResetInputs();
     }
@@ -127,7 +143,7 @@ public partial class FrmFlightManager : Form
 
     private void EditSelectedFlight()
     {
-        if (SelectedFlight is not FlightRow flight)
+        if (SelectedFlight is not Flight flight)
         {
             AdminTheme.Warn(this, "Hãy chọn một chuyến bay trong danh sách.");
             return;
@@ -136,28 +152,31 @@ public partial class FrmFlightManager : Form
         using var form = new FrmFlightEdit(flight);
         if (form.ShowDialog(this) == DialogResult.OK)
         {
-            LoadFlights(flight.Code);
+            LoadFlights(flight.GetFlightNumber());
         }
     }
 
     private void btnDelete_Click(object? sender, EventArgs e)
     {
-        if (SelectedFlight is not FlightRow flight)
+        if (SelectedFlight is not Flight flight)
         {
             AdminTheme.Warn(this, "Hãy chọn một chuyến bay trong danh sách.");
             return;
         }
-        if (AdminDemoData.HasBookings(flight.Code))
-        {
-            AdminTheme.Warn(this, $"Chuyến {flight.Code} đã có vé đặt nên không thể xóa.");
-            return;
-        }
 
-        var answer = MessageBox.Show(this, $"Xóa chuyến bay {flight.Code} ({flight.Route})?", "Xóa chuyến bay",
+        var answer = MessageBox.Show(this, $"Xóa chuyến bay {flight.GetFlightNumber()} ({AdminDisplay.Route(flight)})?", "Xóa chuyến bay",
             MessageBoxButtons.YesNo, MessageBoxIcon.Warning);
         if (answer == DialogResult.Yes)
         {
-            AdminDemoData.RemoveFlight(flight);
+            try
+            {
+                AppServices.Catalog.Remove(flight);
+                LoadFlights();
+            }
+            catch (InvalidOperationException ex)   // chuyến đã có vé đặt
+            {
+                AdminTheme.Warn(this, ex.Message);
+            }
             LoadFlights();
         }
     }

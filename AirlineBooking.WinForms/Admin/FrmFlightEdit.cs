@@ -1,37 +1,50 @@
+using AirlineBooking.Core;
+using System;
+
 namespace AirlineBooking.WinForms.Admin;
 
 public partial class FrmFlightEdit : Form
 {
-    private const int SeatWidth = 32;
-    private const int SeatHeight = 26;
-    private const int SeatGap = 5;
-    private const int AisleWidth = 18;
-    private const int RowNumberWidth = 22;
+    // Kích thước ô ghế tính theo độ phóng to màn hình (100%, 125%, 150%...)
     private const int SeatsPerHalf = 3;
-    private const int LeftBlockStart = RowNumberWidth + SeatGap;
-    private const int AisleStart = LeftBlockStart + SeatsPerHalf * (SeatWidth + SeatGap) - SeatGap;
-    private const int RightBlockStart = AisleStart + AisleWidth;
-    private const int RowWidth = RightBlockStart + SeatsPerHalf * (SeatWidth + SeatGap) - SeatGap;
+    private readonly int _seatWidth;
+    private readonly int _seatHeight;
+    private readonly int _seatGap;
+    private readonly int _aisleWidth;
+    private readonly int _rowNumberWidth;
+    private readonly int _aisleStart;
+    private readonly int _rightBlockStart;
+    private readonly int _rowWidth;
 
-    private readonly FlightRow _flight;
+    private readonly Flight _flight;
     private readonly List<Panel> _seatRows = new();
 
-    public FrmFlightEdit(FlightRow flight)
+    public FrmFlightEdit(Flight flight)
     {
         InitializeComponent();
+        float scale = DeviceDpi / 96f;
+        _seatWidth = (int)(38 * scale);
+        _seatHeight = (int)(26 * scale);
+        _seatGap = (int)(5 * scale);
+        _aisleWidth = (int)(18 * scale);
+        _rowNumberWidth = (int)(26 * scale);
+        _aisleStart = _rowNumberWidth + _seatGap + SeatsPerHalf * (_seatWidth + _seatGap) - _seatGap;
+        _rightBlockStart = _aisleStart + _aisleWidth;
+        _rowWidth = _rightBlockStart + SeatsPerHalf * (_seatWidth + _seatGap) - _seatGap;
+
         _flight = flight;
         AdminTheme.StylePrimaryButton(btnSave);
         AdminTheme.StyleSecondaryButton(btnClose);
 
-        Text = $"Chỉnh sửa chuyến bay — {flight.Code}";
-        lblCodeValue.Text = flight.Code;
-        lblRouteValue.Text = flight.Route;
-        lblTotalValue.Text = flight.TotalSeats.ToString();
-        lblBookedValue.Text = AdminDemoData.CountBooked(flight.Code).ToString();
-        dtpDeparture.Value = flight.Departure;
-        numBasePrice.Value = Math.Clamp(flight.BasePrice, numBasePrice.Minimum, numBasePrice.Maximum);
+        Text = $"Chỉnh sửa chuyến bay — {flight.GetFlightNumber()}";
+        lblCodeValue.Text = flight.GetFlightNumber();
+        lblRouteValue.Text = AdminDisplay.Route(flight);
+        lblTotalValue.Text = flight.GetSeats().Count.ToString();
+        lblBookedValue.Text = AdminDisplay.BookedCount(flight).ToString();
+        dtpDeparture.Value = flight.GetDeparture();
+        numBasePrice.Value = Math.Clamp(SeatLayout.GetBasePrice(flight), numBasePrice.Minimum, numBasePrice.Maximum);
 
-        if (flight.HasDeparted)
+        if (AdminDisplay.HasDeparted(flight))
         {
             dtpDeparture.Enabled = false;
             numBasePrice.Enabled = false;
@@ -44,47 +57,43 @@ public partial class FrmFlightEdit : Form
 
     private void BuildSeatMap()
     {
-        var booked = AdminDemoData.GetBookedSeats(_flight.Code).ToHashSet();
         flpSeatMap.SuspendLayout();
-        int rowNumber = 1;
-        for (int i = 0; i < _flight.BusinessRows; i++)
+        foreach (var (rowNumber, seats) in SeatLayout.GetRows(_flight))
         {
-            AddSeatRow(rowNumber++, FlightRow.BusinessLetters, isBusiness: true, booked);
-        }
-        for (int i = 0; i < _flight.EconomyRows; i++)
-        {
-            AddSeatRow(rowNumber++, FlightRow.EconomyLetters, isBusiness: false, booked);
+            AddSeatRow(rowNumber, seats);
         }
         flpSeatMap.ResumeLayout();
         CenterSeatRows();
     }
 
-    private void AddSeatRow(int rowNumber, string[] letters, bool isBusiness, HashSet<string> booked)
+    private void AddSeatRow(int rowNumber, IReadOnlyList<Seat> seats)
     {
-        var row = new Panel { Size = new Size(RowWidth, SeatHeight), Margin = new Padding(0, 0, 0, SeatGap) };
+        var row = new Panel { Size = new Size(_rowWidth, _seatHeight), Margin = new Padding(0, 0, 0, _seatGap) };
         row.Controls.Add(new Label
         {
             Text = rowNumber.ToString(),
             Font = AdminTheme.SmallFont,
             ForeColor = AdminTheme.RowNumber,
             TextAlign = ContentAlignment.MiddleRight,
-            Bounds = new Rectangle(0, 0, RowNumberWidth, SeatHeight),
+            Bounds = new Rectangle(0, 0, _rowNumberWidth, _seatHeight),
         });
 
-        int half = letters.Length / 2;
-        for (int i = 0; i < letters.Length; i++)
+        int half = (seats.Count + 1) / 2;
+        for (int i = 0; i < seats.Count; i++)
         {
-            string code = $"{rowNumber}{letters[i]}";
+            Seat seat = seats[i];
             int x = i < half
-                ? AisleStart - (half - i) * (SeatWidth + SeatGap) + SeatGap   // nửa trái, sát lối đi
-                : RightBlockStart + (i - half) * (SeatWidth + SeatGap);        // nửa phải
-            var seat = booked.Contains(code)
-                ? new SeatLabel(code, AdminTheme.BookedSeat, AdminTheme.BookedSeat, Color.White)
-                : isBusiness
-                    ? new SeatLabel(code, AdminTheme.BusinessSeat, AdminTheme.BusinessSeatBorder, AdminTheme.Text)
-                    : new SeatLabel(code, Color.White, AdminTheme.BookedSeat, AdminTheme.Text);
-            seat.Location = new Point(x, 0);
-            row.Controls.Add(seat);
+                ? _aisleStart - (half - i) * (_seatWidth + _seatGap) + _seatGap   // nửa trái, sát lối đi
+                : _rightBlockStart + (i - half) * (_seatWidth + _seatGap);        // nửa phải
+            string seatClass = seat.GetSeatClass().GetName();
+            bool premium = seatClass == "First" || seatClass == "Business";
+            var label = !seat.IsAvailable()
+                ? new SeatLabel(seat.GetCode(), AdminTheme.BookedSeat, AdminTheme.BookedSeat, Color.White)
+                : premium
+                    ? new SeatLabel(seat.GetCode(), AdminTheme.BusinessSeat, AdminTheme.BusinessSeatBorder, AdminTheme.Text)
+                    : new SeatLabel(seat.GetCode(), Color.White, AdminTheme.BookedSeat, AdminTheme.Text);
+            label.Bounds = new Rectangle(x, 0, _seatWidth, _seatHeight);
+            row.Controls.Add(label);
         }
 
         _seatRows.Add(row);
@@ -93,10 +102,10 @@ public partial class FrmFlightEdit : Form
 
     private void CenterSeatRows()
     {
-        int left = Math.Max(0, (flpSeatMap.ClientSize.Width - RowWidth) / 2);
+        int left = Math.Max(0, (flpSeatMap.ClientSize.Width - _rowWidth) / 2);
         foreach (var row in _seatRows)
         {
-            row.Margin = new Padding(left, 0, 0, SeatGap);
+            row.Margin = new Padding(left, 0, 0, _seatGap);
         }
     }
 
@@ -105,15 +114,31 @@ public partial class FrmFlightEdit : Form
     private void btnSave_Click(object? sender, EventArgs e)
     {
         DateTime newDeparture = AdminTheme.TrimSeconds(dtpDeparture.Value);
-        if (newDeparture != _flight.Departure && newDeparture <= DateTime.Now)
+        try
         {
-            AdminTheme.Warn(this, "Giờ bay mới phải ở thời điểm sau hiện tại.");
+            if (newDeparture != _flight.GetDeparture())
+            {
+                _flight.Reschedule(newDeparture, AppServices.Now);
+            }
+            if (numBasePrice.Value != SeatLayout.GetBasePrice(_flight))
+            {
+                foreach (string className in AdminDisplay.SeatClassNames(_flight))
+                {
+                    _flight.UpdatePrice(className, numBasePrice.Value);   // mỗi hạng tự nhân hệ số khi bán
+                }
+            }
+        }
+        catch (ArgumentException ex)
+        {
+            AdminTheme.Warn(this, ex.Message);
+            return;
+        }
+        catch (InvalidOperationException ex)
+        {
+            AdminTheme.Warn(this, ex.Message);
             return;
         }
 
-        // Tuần 3: flight.Reschedule(newDeparture) và flight.UpdatePrice(tên hạng ghế, giá mới) trong Core.
-        _flight.Departure = newDeparture;
-        _flight.BasePrice = numBasePrice.Value;
         DialogResult = DialogResult.OK;
     }
 }

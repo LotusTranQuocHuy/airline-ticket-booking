@@ -337,7 +337,7 @@ namespace AirlineBooking.WinForms.Admin
             lblLegendBusiness.Location = new Point(200, 49);
             lblLegendBusiness.Name = "lblLegendBusiness";
             lblLegendBusiness.TabIndex = 6;
-            lblLegendBusiness.Text = "Business";
+            lblLegendBusiness.Text = "First / Business";
             //
             // flpSeatMap
             //
