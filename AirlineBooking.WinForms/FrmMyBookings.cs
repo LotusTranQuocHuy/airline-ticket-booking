@@ -31,10 +31,25 @@ internal sealed class FrmMyBookings : Form
         content.RowStyles.Add(new RowStyle(SizeType.Absolute, 52F));
         content.RowStyles.Add(new RowStyle(SizeType.Percent, 100F));
         content.RowStyles.Add(new RowStyle(SizeType.Absolute, 70F));
-        var topRow = new Panel { Dock = DockStyle.Fill, BackColor = UiKit.Background };
-        topRow.Controls.Add(UiKit.At("Danh sách đặt chỗ", 0, 12, 14, true));
-        _summary.Location = new Point(200, 19);
-        topRow.Controls.Add(_summary);
+        var topRow = new TableLayoutPanel
+        {
+            Dock = DockStyle.Fill,
+            BackColor = UiKit.Background,
+            ColumnCount = 2,
+            RowCount = 1,
+            Margin = Padding.Empty,
+            Padding = Padding.Empty
+        };
+        topRow.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 65F));
+        topRow.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 35F));
+        topRow.RowStyles.Add(new RowStyle(SizeType.Percent, 100F));
+        var sectionTitle = UiKit.At("Danh sách đặt chỗ", 0, 0, 14, true);
+        sectionTitle.Dock = DockStyle.Fill;
+        sectionTitle.TextAlign = ContentAlignment.MiddleLeft;
+        topRow.Controls.Add(sectionTitle, 0, 0);
+        _summary.Dock = DockStyle.Fill;
+        _summary.TextAlign = ContentAlignment.MiddleRight;
+        topRow.Controls.Add(_summary, 1, 0);
         content.Controls.Add(topRow, 0, 0);
 
         UiKit.ConfigureGrid(_grid);

@@ -121,30 +121,25 @@ internal sealed class FrmUserMain : Form
             BackColor = UiKit.Navy
         };
         _searchContent.Top = 22;
-        searchArea.Resize += (_, _) =>
-        {
-            _searchContent.Width = GetContentWidth(searchArea.ClientSize.Width);
-            _searchContent.Left = Math.Max(28, (searchArea.ClientSize.Width - _searchContent.Width) / 2);
-        };
 
-        var title = UiKit.At("Dễ dàng tìm chuyến bay cho hành trình tiếp theo.", 0, 10, 25, true, Color.White);
+        var title = UiKit.At("Dễ dàng tìm chuyến bay cho hành trình tiếp theo.", 0, 0, 25, true, Color.White);
         title.AutoSize = false;
-        title.Size = new Size(MaximumContentWidth, 42);
+        title.Size = new Size(MaximumContentWidth, 52);
         title.TextAlign = ContentAlignment.MiddleLeft;
         _searchContent.Controls.Add(title);
         _welcome.Text = $"Chào {_passenger.GetFullName()}, chọn hành trình bạn muốn khám phá.";
         _welcome.AutoSize = false;
-        _welcome.Location = new Point(2, 60);
-        _welcome.Size = new Size(MaximumContentWidth - 4, 22);
+        _welcome.Location = new Point(2, 56);
+        _welcome.Size = new Size(MaximumContentWidth - 4, 24);
         _welcome.TextAlign = ContentAlignment.MiddleLeft;
         _welcome.AutoEllipsis = true;
         _searchContent.Controls.Add(_welcome);
 
-        _roundTripButton.Location = new Point(0, 94);
+        _roundTripButton.Location = new Point(0, 88);
         _roundTripButton.Size = new Size(145, 38);
         _roundTripButton.TextAlign = ContentAlignment.MiddleCenter;
         _roundTripButton.AutoEllipsis = false;
-        _oneWayButton.Location = new Point(155, 94);
+        _oneWayButton.Location = new Point(155, 88);
         _oneWayButton.Size = new Size(155, 38);
         _oneWayButton.TextAlign = ContentAlignment.MiddleCenter;
         _oneWayButton.AutoEllipsis = false;
@@ -157,7 +152,7 @@ internal sealed class FrmUserMain : Form
         PopulateSearchChoices();
         var searchRow = new TableLayoutPanel
         {
-            Location = new Point(0, 146),
+            Location = new Point(0, 138),
             Size = new Size(MaximumContentWidth, 94),
             ColumnCount = 6,
             RowCount = 1,
@@ -183,12 +178,10 @@ internal sealed class FrmUserMain : Form
         searchButton.Click += (_, _) => SearchFlights();
         searchRow.Controls.Add(searchButton, 5, 0);
         _searchContent.Controls.Add(searchRow);
-        _searchContent.Resize += (_, _) => searchRow.Width = _searchContent.ClientSize.Width;
-
         var swapButton = UiKit.Button("⇄", height: 40);
         swapButton.Size = new Size(42, 42);
         swapButton.FlatAppearance.BorderColor = UiKit.Border;
-        swapButton.Location = new Point(224, 172);
+        swapButton.Location = new Point(224, 164);
         swapButton.BringToFront();
         swapButton.Click += (_, _) => SwapLocations();
         _searchContent.Controls.Add(swapButton);
@@ -199,14 +192,14 @@ internal sealed class FrmUserMain : Form
             AutoSize = true,
             ForeColor = Color.White,
             Font = new Font("Segoe UI", 9F),
-            Location = new Point(0, 248)
+            Location = new Point(0, 240)
         };
         _searchContent.Controls.Add(nonstop);
 
         var demoNote = UiKit.At(
             "Các chuyến bay hiển thị là dữ liệu mẫu; đặt và hủy vé được xử lý trong phiên ứng dụng.",
             0,
-            279,
+            271,
             9,
             false,
             Color.FromArgb(177, 197, 220));
@@ -225,8 +218,39 @@ internal sealed class FrmUserMain : Form
             }
             _returnDate.MinDate = _departureDate.Value.Date;
         };
+        Font? fittedTitleFont = null;
+        void ResizeSearchContent()
+        {
+            _searchContent.Width = GetContentWidth(searchArea.ClientSize.Width);
+            _searchContent.Left = Math.Max(28, (searchArea.ClientSize.Width - _searchContent.Width) / 2);
+            searchRow.Width = _searchContent.ClientSize.Width;
+
+            var fontSize = GetFittingTitleFontSize(title.Text, _searchContent.ClientSize.Width);
+            if (fittedTitleFont?.Size != fontSize)
+            {
+                var previous = title.Font;
+                fittedTitleFont = new Font("Segoe UI", fontSize, FontStyle.Bold);
+                title.Font = fittedTitleFont;
+                previous.Dispose();
+            }
+
+            title.Width = _searchContent.ClientSize.Width;
+            title.Height = Math.Max(52, title.Font.Height + 12);
+            _welcome.Location = new Point(2, title.Bottom + 2);
+            _welcome.Width = Math.Max(0, _searchContent.ClientSize.Width - 4);
+            var tripButtonsTop = _welcome.Bottom + 8;
+            _roundTripButton.Top = tripButtonsTop;
+            _oneWayButton.Top = tripButtonsTop;
+            searchRow.Top = _roundTripButton.Bottom + 10;
+            swapButton.Top = searchRow.Top + (searchRow.Height - swapButton.Height) / 2;
+            nonstop.Top = searchRow.Bottom + 12;
+            demoNote.Top = nonstop.Bottom + 6;
+        }
+
+        searchArea.Resize += (_, _) => ResizeSearchContent();
         searchArea.Controls.Add(_searchContent);
         _hero.Controls.Add(searchArea, 0, 1);
+        ResizeSearchContent();
     }
 
     private Panel BuildDiscoverSection()
@@ -308,6 +332,20 @@ internal sealed class FrmUserMain : Form
 
     private static int GetSuggestedCardWidth(int contentWidth) =>
         Math.Max(220, (contentWidth - 36) / 4);
+
+    private static float GetFittingTitleFontSize(string text, int width)
+    {
+        for (var size = 25F; size >= 18F; size -= 0.5F)
+        {
+            using var font = new Font("Segoe UI", size, FontStyle.Bold);
+            if (TextRenderer.MeasureText(text, font, Size.Empty, TextFormatFlags.SingleLine).Width <= width - 12)
+            {
+                return size;
+            }
+        }
+
+        return 18F;
+    }
 
     private static Panel CreateSearchField(string caption, Control input)
     {
