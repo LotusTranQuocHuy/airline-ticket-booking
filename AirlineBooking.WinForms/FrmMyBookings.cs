@@ -50,7 +50,7 @@ internal sealed class FrmMyBookings : Form
         cancelButton.Size = new Size(190, 42);
         cancelButton.Anchor = AnchorStyles.Top | AnchorStyles.Right;
         cancelButton.Location = new Point(Math.Max(0, ClientSize.Width - 250), 12);
-        cancelButton.Click += (_, _) => CancelSelectedDemoBooking();
+        cancelButton.Click += (_, _) => CancelSelectedBooking();
         footer.Controls.Add(cancelButton);
         content.Controls.Add(footer);
 
@@ -64,49 +64,74 @@ internal sealed class FrmMyBookings : Form
         var bookings = DemoData.GetBookings(_passenger);
         foreach (var booking in bookings)
         {
-            var status = booking.IsCancelled ? "Đã hủy" : "Đã xác nhận ";
+            var flight = booking.GetFlight();
+            var seat = booking.GetSeat();
+            var status = booking.GetStatus() == BookingStatus.Cancelled ? "Đã hủy" : "Đã xác nhận";
             var index = _grid.Rows.Add(
-                booking.Id,
-                $"{booking.Flight.Number} · {booking.Flight.Origin} → {booking.Flight.Destination}",
-                booking.Flight.Departure.ToString("dd/MM/yyyy · HH:mm"),
-                $"{booking.SeatCode} · {booking.SeatClass}",
-                UiKit.Money(booking.Amount),
+                booking.GetBookingId(),
+                $"{flight.GetFlightNumber()} · {flight.GetOrigin()} → {flight.GetDestination()}",
+                flight.GetDeparture().ToString("dd/MM/yyyy · HH:mm"),
+                $"{seat.GetCode()} · {seat.GetSeatClass().GetName()}",
+                UiKit.Money(booking.GetPaidAmount()),
                 status);
             _grid.Rows[index].Tag = booking;
         }
-        _summary.Text = $"{bookings.Count} vé mẫu";
+        _summary.Text = $"{bookings.Count} vé";
     }
 
-    private void CancelSelectedDemoBooking()
+    private void CancelSelectedBooking()
     {
-        if (_grid.CurrentRow?.Tag is not DemoBooking booking)
+        if (_grid.CurrentRow?.Tag is not Booking booking)
         {
             MessageBox.Show(this, "Hãy chọn một vé trong danh sách.",
                 "Chưa chọn vé", MessageBoxButtons.OK, MessageBoxIcon.Information);
             return;
         }
 
-        if (booking.IsCancelled)
+        if (booking.GetStatus() == BookingStatus.Cancelled)
         {
-            MessageBox.Show(this, "Vé mẫu này đã được hủy.",
+            MessageBox.Show(this, "Vé này đã được hủy.",
                 "Thông tin vé", MessageBoxButtons.OK, MessageBoxIcon.Information);
             return;
         }
 
-        var previewRefund = decimal.Round(booking.Amount * 0.9m, 0);
+        decimal fee;
+        decimal refund;
+        try
+        {
+            (fee, refund) = DemoData.PreviewCancellation(booking);
+        }
+        catch (InvalidBookingStateException ex)
+        {
+            MessageBox.Show(this, ex.Message, "Không thể hủy vé",
+                MessageBoxButtons.OK, MessageBoxIcon.Warning);
+            RefreshBookings();
+            return;
+        }
+
         var answer = MessageBox.Show(
             this,
-            $"Mô phỏng hủy vé:\nPhí hủy mẫu: {UiKit.Money(booking.Amount - previewRefund)}\n" +
-            $"Tiền hoàn mẫu: {UiKit.Money(previewRefund)}\n\n" +
-            "Bạn có muốn tiếp tục mô phỏng không? Chưa có giao dịch thật.",
-            "Xác nhận hủy vé ",
+            $"Phí hủy: {UiKit.Money(fee)}\nTiền hoàn: {UiKit.Money(refund)}\n\n" +
+            "Bạn có muốn hủy vé này không?",
+            "Xác nhận hủy vé",
             MessageBoxButtons.YesNo,
             MessageBoxIcon.Question);
 
         if (answer == DialogResult.Yes)
         {
-            DemoData.CancelDemoBooking(booking);
-            RefreshBookings();
+            try
+            {
+                var actualRefund = DemoData.Cancel(_passenger, booking.GetBookingId());
+                MessageBox.Show(this, $"Đã hủy vé. Số tiền hoàn: {UiKit.Money(actualRefund)}",
+                    "Hủy vé thành công", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                RefreshBookings();
+            }
+            catch (InvalidBookingStateException ex)
+            {
+                MessageBox.Show(this, ex.Message, "Không thể hủy vé",
+                    MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                RefreshBookings();
+            }
         }
     }
 }

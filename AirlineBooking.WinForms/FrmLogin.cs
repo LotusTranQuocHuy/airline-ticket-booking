@@ -112,7 +112,6 @@ public sealed class FrmLogin : Form
         }
 
         var passenger = new Passenger(Guid.NewGuid().ToString("N"), fullName, email);
-        DemoData.StartSession(passenger);
         Hide();
         using (var main = new FrmUserMain(passenger))
         {

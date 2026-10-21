@@ -145,13 +145,25 @@ internal sealed class FrmSearchFlight : Form
 
     private void Search()
     {
+        if (_origin.SelectedItem is null || _destination.SelectedItem is null)
+        {
+            MessageBox.Show(this, "Chọn điểm đi và điểm đến trước khi tìm chuyến.",
+                "Thiếu thông tin hành trình", MessageBoxButtons.OK, MessageBoxIcon.Information);
+            return;
+        }
+
+        if (string.Equals(_origin.Text, _destination.Text, StringComparison.OrdinalIgnoreCase))
+        {
+            MessageBox.Show(this, "Điểm đi và điểm đến phải khác nhau.",
+                "Hành trình không hợp lệ", MessageBoxButtons.OK, MessageBoxIcon.Information);
+            return;
+        }
+
         _results.Rows.Clear();
-        var matches = DemoData.GetFlights().Where(flight =>
-            flight.Origin == _origin.Text &&
-            flight.Destination == _destination.Text &&
-            DateOnly.FromDateTime(flight.Departure) == DateOnly.FromDateTime(_date.Value))
-            .OrderBy(flight => flight.Departure)
-            .ToArray();
+        var matches = DemoData.SearchFlights(
+            _origin.Text,
+            _destination.Text,
+            DateOnly.FromDateTime(_date.Value));
 
         foreach (var flight in matches)
         {
@@ -163,8 +175,8 @@ internal sealed class FrmSearchFlight : Form
             _results.Rows[rowIndex].Tag = flight;
         }
 
-        _count.Text = matches.Length == 0 ? "Không tìm thấy chuyến phù hợp" : $"{matches.Length} chuyến";
-        if (matches.Length == 0)
+        _count.Text = matches.Count == 0 ? "Không tìm thấy chuyến phù hợp" : $"{matches.Count} chuyến";
+        if (matches.Count == 0)
         {
             var index = _results.Rows.Add(
                 "Chưa có chuyến",
@@ -194,7 +206,7 @@ internal sealed class FrmSearchFlight : Form
         {
             MessageBox.Show(
                 this,
-                "Đã đặt vé mẫu thành công. Bạn có thể xem vé trong mục “Vé của tôi”.",
+                "Đặt vé thành công. Bạn có thể xem vé trong mục “Vé của tôi”.",
                 "Đặt vé thành công",
                 MessageBoxButtons.OK,
                 MessageBoxIcon.Information);

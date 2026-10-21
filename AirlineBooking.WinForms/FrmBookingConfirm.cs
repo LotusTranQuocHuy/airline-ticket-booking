@@ -7,21 +7,17 @@ internal sealed class FrmBookingConfirm : Form
     private readonly Passenger _passenger;
     private readonly DemoFlight _flight;
     private readonly string _seatCode;
-    private readonly string _seatClass;
-    private readonly decimal _amount;
 
     public FrmBookingConfirm(
         Passenger passenger,
         DemoFlight flight,
-        string seatCode,
-        string seatClass,
-        decimal amount)
+        Seat seat)
     {
         _passenger = passenger;
         _flight = flight;
-        _seatCode = seatCode;
-        _seatClass = seatClass;
-        _amount = amount;
+        _seatCode = seat.GetCode();
+        var seatClass = seat.GetSeatClass().GetName();
+        var amount = seat.GetSeatClass().CalculatePrice(seat.GetPrice());
         UiKit.ConfigureForm(this, "Xác nhận đặt vé | AirlineTicket");
         Controls.Add(UiKit.Header(
             "HOÀN TẤT",
@@ -38,10 +34,10 @@ internal sealed class FrmBookingConfirm : Form
         card.Controls.Add(UiKit.At("Hành khách", 34, 166, 9, false, UiKit.Muted));
         card.Controls.Add(UiKit.At(passenger.GetFullName(), 34, 188, 11, true));
         card.Controls.Add(UiKit.At("Ghế", 34, 232, 9, false, UiKit.Muted));
-        card.Controls.Add(UiKit.At($"{seatCode}  ·  {seatClass}", 34, 254, 11, true));
-        card.Controls.Add(UiKit.At("Tổng tiền (mẫu)", 34, 298, 9, false, UiKit.Muted));
+        card.Controls.Add(UiKit.At($"{_seatCode}  ·  {seatClass}", 34, 254, 11, true));
+        card.Controls.Add(UiKit.At("Tổng tiền", 34, 298, 9, false, UiKit.Muted));
         card.Controls.Add(UiKit.At(UiKit.Money(amount), 34, 322, 20, true, UiKit.Blue));
-        card.Controls.Add(UiKit.At("Đây là luồng giao diện demo; dịch vụ đặt vé sẽ được kết nối ở Tuần 3.", 34, 374, 9, false, UiKit.Muted));
+        card.Controls.Add(UiKit.At("Giá được tính theo hạng ghế của chuyến bay.", 34, 374, 9, false, UiKit.Muted));
 
         var cancelButton = UiKit.Button("Quay lại", height: 44);
         cancelButton.Size = new Size(150, 44);
@@ -52,33 +48,22 @@ internal sealed class FrmBookingConfirm : Form
         var confirmButton = UiKit.Button("Đặt vé ", primary: true, height: 44);
         confirmButton.Size = new Size(190, 44);
         confirmButton.Location = new Point(198, 425);
-        confirmButton.Click += (_, _) => ConfirmDemoBooking();
+        confirmButton.Click += (_, _) => ConfirmBooking();
         card.Controls.Add(confirmButton);
         Controls.Add(card);
     }
 
-    private void ConfirmDemoBooking()
+    private void ConfirmBooking()
     {
         try
         {
-            var booking = DemoData.AddBooking(
-                _passenger,
-                _flight,
-                _seatCode,
-                _seatClass,
-                _amount);
-            MessageBox.Show(
-                this,
-                $"Đã thêm vé mẫu {booking.Id} vào mục Vé của tôi.",
-                "Hoàn tất ",
-                MessageBoxButtons.OK,
-                MessageBoxIcon.Information);
+            DemoData.Book(_passenger, _flight, _seatCode);
             DialogResult = DialogResult.OK;
             Close();
         }
-        catch (InvalidOperationException ex)
+        catch (Exception ex) when (ex is SeatUnavailableException or FlightNotFoundException or InvalidBookingStateException)
         {
-            MessageBox.Show(this, ex.Message, "Không thể chọn ghế",
+            MessageBox.Show(this, ex.Message, "Không thể đặt vé",
                 MessageBoxButtons.OK, MessageBoxIcon.Warning);
         }
     }

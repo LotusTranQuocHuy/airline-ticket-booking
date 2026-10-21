@@ -181,7 +181,7 @@ internal sealed class FrmUserMain : Form
         _searchContent.Controls.Add(nonstop);
 
         var demoNote = UiKit.At(
-            "Dữ liệu hành trình và giá vé hiện là dữ liệu mẫu.",
+            "Các chuyến bay hiển thị là dữ liệu mẫu; đặt và hủy vé được xử lý trong phiên ứng dụng.",
             0,
             285,
             9,
@@ -406,7 +406,7 @@ internal sealed class FrmUserMain : Form
         {
             MessageBox.Show(
                 this,
-                "Vé demo đã được thêm. Bạn có thể xem vé trong mục “Vé của tôi”.",
+                "Đặt vé thành công. Bạn có thể xem vé trong mục “Vé của tôi”.",
                 "Đặt vé thành công ",
                 MessageBoxButtons.OK,
                 MessageBoxIcon.Information);
