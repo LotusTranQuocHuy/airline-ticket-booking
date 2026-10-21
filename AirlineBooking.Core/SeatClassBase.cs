@@ -12,23 +12,46 @@ public abstract class SeatClassBase : ISeatClass
 
     protected SeatClassBase(string name, decimal priceMultiplier, IReadOnlyList<CancellationTier> tiers)
     {
+        ArgumentException.ThrowIfNullOrWhiteSpace(name);
+        ArgumentNullException.ThrowIfNull(tiers);
+        if (priceMultiplier <= 0)
+        {
+            throw new ArgumentOutOfRangeException(nameof(priceMultiplier), "Hệ số giá phải lớn hơn 0.");
+        }
+
+        if (tiers.Count == 0 ||
+            tiers.Any(tier => tier.GetMinTimeBefore() < TimeSpan.Zero || tier.GetFeeRate() is < 0 or > 1))
+        {
+            throw new ArgumentException("Bảng phí hủy cần có mốc thời gian và tỷ lệ phí hợp lệ.", nameof(tiers));
+        }
+
         _name = name;
         _priceMultiplier = priceMultiplier;
-        _tiers = tiers;
+        _tiers = tiers.OrderByDescending(tier => tier.GetMinTimeBefore()).ToArray();
     }
 
     public string GetName() => _name;
 
     public decimal CalculatePrice(decimal price)
     {
-        // TODO (tuần 3): giá vé = price * _priceMultiplier
-        throw new NotImplementedException();
+        if (price <= 0)
+        {
+            throw new ArgumentOutOfRangeException(nameof(price), "Giá cơ bản phải lớn hơn 0.");
+        }
+
+        return decimal.Round(price * _priceMultiplier, 0, MidpointRounding.AwayFromZero);
     }
 
     public decimal CancellationFeeRate(TimeSpan timeLeft)
     {
-        // TODO (tuần 3): duyệt _tiers theo mốc giờ giảm dần,
-        // trả về GetFeeRate() của mốc đầu tiên có timeLeft >= GetMinTimeBefore()
-        throw new NotImplementedException();
+        foreach (var tier in _tiers)
+        {
+            if (timeLeft >= tier.GetMinTimeBefore())
+            {
+                return tier.GetFeeRate();
+            }
+        }
+
+        return _tiers[^1].GetFeeRate();
     }
 }

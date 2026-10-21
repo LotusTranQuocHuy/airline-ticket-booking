@@ -8,6 +8,7 @@ public class BookingService
     private readonly FlightCatalog _flightCatalog;
     private readonly TimeProvider _time;
     private readonly List<Booking> _bookings = new();
+    private readonly object _sync = new();
 
     public BookingService(FlightCatalog catalog, TimeProvider time)
     {
@@ -15,21 +16,53 @@ public class BookingService
         _time = time;
     }
 
-    public IReadOnlyList<Booking> GetBookings() => _bookings.AsReadOnly();
+    public IReadOnlyList<Booking> GetBookings()
+    {
+        lock (_sync)
+        {
+            return _bookings.ToArray();
+        }
+    }
 
     public IReadOnlyList<Booking> GetBookingsByPassenger(string passengerId) =>
-        _bookings.Where(b => b.GetPassenger().GetId() == passengerId).ToList();
+        GetBookings()
+            .Where(b => b.GetPassenger().GetId() == passengerId)
+            .ToArray();
 
     public Booking Book(string flightNumber, string seatCode, Passenger passenger)
     {
-        // TODO (tuần 3): tìm chuyến (không có thì ném FlightNotFoundException), tìm ghế,
-        // Booking.Create(flight, seat, passenger, _time.GetLocalNow().DateTime), thêm vào _bookings
-        throw new NotImplementedException();
+        ArgumentException.ThrowIfNullOrWhiteSpace(flightNumber);
+        ArgumentException.ThrowIfNullOrWhiteSpace(seatCode);
+        ArgumentNullException.ThrowIfNull(passenger);
+
+        var flight = _flightCatalog.Find(flightNumber)
+            ?? throw new FlightNotFoundException(flightNumber);
+        var seat = flight.GetSeat(seatCode)
+            ?? throw new SeatUnavailableException(seatCode);
+        var booking = Booking.Create(flight, seat, passenger, _time.GetLocalNow().DateTime);
+
+        lock (_sync)
+        {
+            _bookings.Add(booking);
+        }
+
+        return booking;
     }
 
     public decimal Cancel(string bookingId)
     {
-        // TODO (tuần 3): tìm vé theo mã, gọi booking.Cancel(_time.GetLocalNow().DateTime)
-        throw new NotImplementedException();
+        ArgumentException.ThrowIfNullOrWhiteSpace(bookingId);
+        Booking? booking;
+        lock (_sync)
+        {
+            booking = _bookings.FirstOrDefault(b => b.GetBookingId() == bookingId);
+        }
+
+        if (booking is null)
+        {
+            throw new InvalidBookingStateException($"Không tìm thấy vé {bookingId}.");
+        }
+
+        return booking.Cancel(_time.GetLocalNow().DateTime);
     }
 }

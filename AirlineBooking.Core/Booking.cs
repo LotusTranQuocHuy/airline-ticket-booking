@@ -15,6 +15,7 @@ public class Booking
     private readonly DateTime _bookedAt;
     private decimal _refundAmount;
     private DateTime? _cancelledAt;
+    private readonly object _sync = new();
 
     private Booking(string bookingId, Flight flight, Seat seat, Passenger passenger,
                     decimal paidAmount, DateTime bookedAt)
@@ -30,18 +31,76 @@ public class Booking
 
     public static Booking Create(Flight flight, Seat seat, Passenger passenger, DateTime now)
     {
-        // TODO (tuần 3): seat.TryLock(passenger), nếu false thì ném SeatUnavailableException;
-        // tính giá = seat.GetSeatClass().CalculatePrice(seat.GetPrice()); seat.Confirm(passenger);
-        // return new Booking(mã vé mới, flight, seat, passenger, giá, now);
-        throw new NotImplementedException();
+        ArgumentNullException.ThrowIfNull(flight);
+        ArgumentNullException.ThrowIfNull(seat);
+        ArgumentNullException.ThrowIfNull(passenger);
+
+        if (!flight.GetSeats().Contains(seat))
+        {
+            throw new ArgumentException("Ghế không thuộc chuyến bay đã chọn.", nameof(seat));
+        }
+
+        if (!seat.TryLock(passenger))
+        {
+            throw new SeatUnavailableException(seat.GetCode());
+        }
+
+        try
+        {
+            var paidAmount = seat.GetSeatClass().CalculatePrice(seat.GetPrice());
+            seat.Confirm(passenger);
+            return new Booking(
+                Guid.NewGuid().ToString("N"),
+                flight,
+                seat,
+                passenger,
+                paidAmount,
+                now);
+        }
+        catch
+        {
+            seat.Release(passenger);
+            throw;
+        }
     }
 
     public decimal Cancel(DateTime now)
     {
-        // TODO (tuần 3): nếu đã Cancelled hoặc chuyến đã bay thì ném InvalidBookingStateException;
-        // phí = _paidAmount * CancellationFeeRate(GetDeparture() - now); _refundAmount = _paidAmount - phí;
-        // _status = Cancelled; _cancelledAt = now; _seat.Release(); return _refundAmount;
-        throw new NotImplementedException();
+        lock (_sync)
+        {
+            var quote = CalculateCancellationQuote(now);
+            _refundAmount = quote.Refund;
+            _seat.Release(_passenger);
+            _cancelledAt = now;
+            _status = BookingStatus.Cancelled;
+            return _refundAmount;
+        }
+    }
+
+    public (decimal Fee, decimal Refund) PreviewCancellation(DateTime now)
+    {
+        lock (_sync)
+        {
+            return CalculateCancellationQuote(now);
+        }
+    }
+
+    private (decimal Fee, decimal Refund) CalculateCancellationQuote(DateTime now)
+    {
+        if (_status != BookingStatus.Confirmed)
+        {
+            throw new InvalidBookingStateException($"Vé {_bookingId} đã được hủy.");
+        }
+
+        var timeLeft = _flight.GetDeparture() - now;
+        if (timeLeft <= TimeSpan.Zero)
+        {
+            throw new InvalidBookingStateException("Không thể hủy vé sau giờ khởi hành.");
+        }
+
+        var feeRate = _seat.GetSeatClass().CancellationFeeRate(timeLeft);
+        var fee = decimal.Round(_paidAmount * feeRate, 0, MidpointRounding.AwayFromZero);
+        return (fee, _paidAmount - fee);
     }
 
     public string GetBookingId() => _bookingId;
@@ -54,11 +113,29 @@ public class Booking
 
     public decimal GetPaidAmount() => _paidAmount;
 
-    public BookingStatus GetStatus() => _status;
+    public BookingStatus GetStatus()
+    {
+        lock (_sync)
+        {
+            return _status;
+        }
+    }
 
     public DateTime GetBookedAt() => _bookedAt;
 
-    public decimal GetRefundAmount() => _refundAmount;
+    public decimal GetRefundAmount()
+    {
+        lock (_sync)
+        {
+            return _refundAmount;
+        }
+    }
 
-    public DateTime? GetCancelledAt() => _cancelledAt;
+    public DateTime? GetCancelledAt()
+    {
+        lock (_sync)
+        {
+            return _cancelledAt;
+        }
+    }
 }
