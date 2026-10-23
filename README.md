@@ -19,10 +19,13 @@ AirlineBooking.Core/
 ├── Dịch vụ:              FlightCatalog, BookingService, RevenueReportService, RevenueLine
 └── Exception:            SeatUnavailableException, InvalidBookingStateException, FlightNotFoundException
 AirlineBooking.WinForms/
-├── Chung:                FrmLogin, UiKit
-├── Người dùng:           FrmUserMain, FrmSearchFlight, FrmSeatMap, FrmBookingConfirm, FrmMyBookings, DemoData
+├── Dùng chung:           AppServices (một bộ FlightCatalog / BookingService / RevenueReportService cho cả app),
+│                         SeatLayout (quy tắc sắp ghế 4 hạng), SampleData (dữ liệu mẫu nạp lúc mở app),
+│                         FrmLogin, UiKit
+├── Người dùng:           FrmUserMain, FrmSearchFlight, FrmSeatMap, FrmBookingConfirm, FrmMyBookings,
+│                         FrmTransferBooking, DemoData
 └── Admin/                FrmAdminMain, FrmFlightManager, FrmFlightEdit, FrmBookingManager, FrmRevenueReport,
-                          AdminTheme, AdminDemoData, Controls/ (CardPanel, MenuCard, BarChart, SeatLabel)
+                          AdminTheme, AdminDisplay, Controls/ (CardPanel, MenuCard, BarChart, SeatLabel)
 docs/                     Class diagram (ảnh + file Enterprise Architect), kế hoạch thực hiện, AI Usage Log
 AirlineBooking.Core.Tests/ Kiểm thử tự động luồng đặt vé
 ```

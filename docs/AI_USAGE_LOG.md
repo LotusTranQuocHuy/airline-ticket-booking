@@ -6,9 +6,9 @@ Ghi lại mọi lần nhóm dùng AI: ai dùng, hỏi gì, AI tạo ra gì, nhó
 
 | Công cụ | Model | Người dùng | Dùng cho |
 |---|---|---|---|
-| Claude Code (ứng dụng Claude desktop, Anthropic) | Claude Opus 5.5 | Trần Quốc Huy | Kế hoạch, kiểm tra class diagram, khung code C#, code giao diện Admin |
+| Claude Code (ứng dụng Claude desktop, Anthropic) | Claude Opus 5.5 | Trần Quốc Huy | Kế hoạch, kiểm tra class diagram, khung code C#, code giao diện Admin, nối Admin vào Core và dữ liệu dùng chung (tuần 3) |
 | Claude Design (Anthropic) | — | Trần Quốc Huy | Bản thiết kế (mockup) 5 màn hình Admin |
-| GitHub Copilot (Copilot SDK trong VS Code) | GPT-6-Luna | Ngô Thành Đạt | Giao diện Người dùng |
+| GitHub Copilot (Copilot SDK trong VS Code) | GPT-6-Luna | Ngô Thành Đạt | Giao diện Người dùng, nghiệp vụ đặt / hủy vé trong Core, kiểm thử tự động (tuần 3) |
 
 **Quy ước:** commit có nội dung do AI tạo ghi rõ trong mô tả commit, hoặc có dòng `Co-Authored-By: Claude ...` / `Co-authored-by: Copilot ...`
 
@@ -64,3 +64,25 @@ Ghi lại mọi lần nhóm dùng AI: ai dùng, hỏi gì, AI tạo ra gì, nhó
 | AI tạo ra | Các form WinForms và điều hướng luồng Người dùng (đăng nhập → tìm chuyến → chọn ghế → xác nhận đặt vé → vé của tôi); dữ liệu chuyến bay / vé mẫu trong bộ nhớ; sơ đồ ghế phân biệt hạng bằng màu và khóa ghế đã đặt; các chỉnh sửa giao diện theo phản hồi; nội dung tổng hợp báo cáo tuần 2. |
 | Nhóm sửa / quyết định | Ngô Thành Đạt cung cấp ảnh tham khảo, chạy thử và phản hồi để điều chỉnh giao diện. Chọn sử dụng dữ liệu demo trong bộ nhớ. Khứ hồi hiện lưu / hiển thị ngày về nhưng luồng đặt vé demo mới tạo vé cho lượt đi. |
 | Kết quả | Các form và dữ liệu demo Người dùng — commit [`7b0f82a`](https://github.com/LotusTranQuocHuy/airline-ticket-booking/commit/7b0f82a9e4815a33b774b7b2f0d238b247c70951). Chỉnh banner tránh chồng lấn — commit [`0d1a75e`](https://github.com/LotusTranQuocHuy/airline-ticket-booking/commit/0d1a75eb6f69f37a70619797fc4eb0f98a353c73). Căn dòng mô tả banner — commit [`7753981`](https://github.com/LotusTranQuocHuy/airline-ticket-booking/commit/7753981). |
+
+## Tuần 3
+
+### 1. Nối giao diện Admin vào Core, dùng chung dữ liệu — Trần Quốc Huy (19/10 – 23/10/2026)
+
+| Mục | Nội dung |
+|---|---|
+| Công cụ AI | **Claude Code — model Claude Opus 5.5** (Anthropic). |
+| Prompt | "Cho tôi quy trình hướng dẫn để hoàn thành tuần 3"; "Kiểm tra các file 1.1 – 1.6 tôi đã làm và góp ý"; "Tôi chưa hiểu cách làm của bước D"; "Chỗ lambda vẫn khó hiểu, chỉ cách viết thay thế"; "Ở bước 2 tôi nghĩ sẽ dùng database"; "Bạn giúp tôi hoàn thành 3.0 và 3.1, sửa DemoData.cs và vấn đề sắp ghế"; "Hướng dẫn tôi bước 3"; "Sửa Designer 3.5b, các chỗ gạch đỏ và 3.6 giúp tôi"; "Hướng dẫn bổ sung class diagram, làm bước 5 và 6". |
+| AI tạo ra | Kế hoạch các bước tuần 3; nhận xét lỗi trong code 1.1 – 1.6 kèm đoạn code sửa mẫu (`Booking.Cancel`, `Flight.UpdatePrice`, `FlightCatalog.Remove`, `RevenueReportService.GetTotalPaid` và khung `BuildLines`, cách viết không dùng lambda); lời khuyên không dùng database ở tuần 3. Gộp code với 5 commit của Ngô Thành Đạt và giải quyết xung đột (`Booking.cs`, `Seat.cs` lấy theo bản của Đạt); viết `SeatLayout` (quy tắc sắp ghế 4 hạng), `SampleData` (dữ liệu mẫu, tên sân bay dạng "Hà Nội (HAN)"); sửa `DemoData`, `FrmSeatMap` để phía Người dùng dùng chung `AppServices` và vẽ sơ đồ ghế theo ghế thật của chuyến. Viết `AdminDisplay` và code mẫu nối 5 form Admin vào Core; thêm 2 ô nhập First / Premium trong Designer; sửa lỗi build, lỗi "0 vé" ở Quản lý vé, phóng to lưới và sơ đồ ghế theo độ phóng to màn hình; xóa `AdminDemoData`. Cập nhật README, bản Mermaid class diagram, AI Usage Log, soạn báo cáo tuần 3. |
+| Nhóm sửa / quyết định | Trần Quốc Huy tự viết code `Flight.Reschedule`, `Flight.UpdatePrice`, `FlightCatalog.Remove`, các hàm `RevenueReportService` (chọn cách viết bằng `foreach` / `Dictionary`, không dùng lambda) sau khi được góp ý; tự viết `AppServices.cs` và bản đầu của `SeatLayout`; quyết định không dùng database để giữ đúng kế hoạch đã duyệt; tự nối 5 form Admin vào Core theo hướng dẫn (đổi kiểu dữ liệu, thay lời gọi, sửa bộ lọc, nút hủy vé, nút lưu chuyến bay); tự chạy thử toàn bộ luồng Admin – Người dùng. Lưu ý: `Booking.Cancel` và `Seat.ChangePrice` trong code cuối cùng là bản của Ngô Thành Đạt (giữ lại khi gộp code). |
+| Kết quả | Commit [`ace53a0`](https://github.com/LotusTranQuocHuy/airline-ticket-booking/commit/ace53a0b94c5f519f18d333d495f5961e976ab56) "Implement admin-side Core logic for flights, cancellation and revenue"; [`a631efe`](https://github.com/LotusTranQuocHuy/airline-ticket-booking/commit/a631efe572c9ec3b53c240f45bf9d7bfea7b483b) "Merge Dat's week 3 booking flow into admin Core changes"; [`58325a5`](https://github.com/LotusTranQuocHuy/airline-ticket-booking/commit/58325a538ab25c0e4bfb502b362cdae1779b1799) "Share one data store and seat layout between admin and user screens"; [`094da9c`](https://github.com/LotusTranQuocHuy/airline-ticket-booking/commit/094da9cafd9a148c4c5d69f1b42160c691a52c9e) "Connect admin screens to Core services and remove admin demo data" — đều có dòng `Co-Authored-By: Claude Opus 5.5`. |
+
+### 2. Chức năng Người dùng, kiểm thử tự động, chuyển vé — Ngô Thành Đạt (19/10 – 21/10/2026)
+
+| Mục | Nội dung |
+|---|---|
+| Công cụ AI | **GitHub Copilot** (Copilot trong VS Code), model GPT-6-Luna. |
+| Prompt | Triển khai các chức năng tuần 3 cho phần Người dùng bằng C# WinForms .NET 8, tách quy tắc nghiệp vụ trong `AirlineBooking.Core` khỏi giao diện; hoàn thiện tìm chuyến theo điểm đi, điểm đến, ngày bay; tính giá vé và phí hủy theo hạng ghế; giữ ghế để tránh đặt trùng; đặt vé, hủy vé, tính tiền hoàn; nối luồng tìm chuyến → chọn ghế → xác nhận → vé của tôi; viết kiểm thử tự động cho đặt – hủy – hoàn tiền, đặt trùng ghế, hủy vé hai lần, mức hoàn khác nhau giữa các hạng ghế; sửa lỗi giao diện bị che / chồng lấn theo phản hồi. |
+| AI tạo ra | Nghiệp vụ đặt vé, hủy vé, giữ / trả ghế, tính giá vé và tiền hoàn trong Core (`Seat`, `Booking`, `BookingService`, `FlightCatalog.Search`, `SeatClassBase`); kết nối các màn hình Người dùng với Core; dữ liệu chuyến bay mẫu; project `AirlineBooking.Core.Tests` với 5 test (đặt – hủy – hoàn tiền, đặt trùng ghế đồng thời và hủy hai lần, hoàn tiền theo hạng ghế, chuyển vé, từ chối chuyển vé đã hủy); chức năng chuyển vé cho hành khách khác; chỉnh bố cục màn hình Người dùng. |
+| Nhóm sửa / quyết định | Ngô Thành Đạt kiểm tra bằng build và chạy kiểm thử tự động; chạy thử giao diện, phản hồi lỗi bố cục để tiêu đề và nội dung không bị che hoặc chồng lên nhau; quyết định thêm chức năng chuyển vé. |
+| Kết quả | Commit [`7348164`](https://github.com/LotusTranQuocHuy/airline-ticket-booking/commit/7348164be2b121d1977674350a8d92ba92656fb6) "Implement user booking domain flow"; [`38bef0d`](https://github.com/LotusTranQuocHuy/airline-ticket-booking/commit/38bef0d364f435ad5fe0e5ca3e498e5774081d0c) "Connect user forms to booking services"; [`707fb13`](https://github.com/LotusTranQuocHuy/airline-ticket-booking/commit/707fb13af7efc4fd31e628da4f77b57d3b22c0b0) "Add booking flow tests and documentation"; [`0d8ea20`](https://github.com/LotusTranQuocHuy/airline-ticket-booking/commit/0d8ea2073afe647cda876cf6e0c5a0a1b114a063) "Fix user booking screens and add ticket transfer"; [`5e4a090`](https://github.com/LotusTranQuocHuy/airline-ticket-booking/commit/5e4a0908491ee615e4a585f86ae2e101bb62f741) "Fix user booking screen layout" — đều có dòng `Co-authored-by: Copilot`. |

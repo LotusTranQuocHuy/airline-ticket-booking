@@ -2,7 +2,7 @@
 
 Bản vẽ chính thức (Enterprise Architect): [class-diagram.jpg](class-diagram.jpg) — file gốc: [AirlineBooking.eap](AirlineBooking.eap)
 
-Bản dưới đây viết bằng Mermaid (GitHub tự vẽ thành sơ đồ), cùng nội dung với bản Enterprise Architect.
+Bản dưới đây viết bằng Mermaid (GitHub tự vẽ thành sơ đồ), khớp với code project `AirlineBooking.Core` sau tuần 3.
 
 ```mermaid
 classDiagram
@@ -10,20 +10,24 @@ classDiagram
 
     class FlightCatalog {
         -List~Flight~ flights
+        -object sync
         +Add(flight Flight) void
-        +Find(flightNumber string) Flight
+        +Find(flightNumber string) Flight?
         +GetAll() IReadOnlyList~Flight~
         +Search(origin string, destination string, date DateOnly) IEnumerable~Flight~
+        +Remove(flight Flight) void
     }
     class BookingService {
         -List~Booking~ bookings
         -FlightCatalog flightCatalog
         -TimeProvider time
+        -object sync
         +BookingService(catalog FlightCatalog, time TimeProvider)
-        +Book(flightNumber string, seatCode string, passenger Passenger) Booking
-        +Cancel(bookingId string) decimal
         +GetBookings() IReadOnlyList~Booking~
         +GetBookingsByPassenger(passengerId string) IReadOnlyList~Booking~
+        +Book(flightNumber string, seatCode string, passenger Passenger) Booking
+        +Cancel(bookingId string) decimal
+        +Transfer(bookingId string, currentPassenger Passenger, newPassenger Passenger) void
     }
     class RevenueReportService {
         -BookingService bookingService
@@ -33,6 +37,9 @@ classDiagram
         +GetNetRevenue(from DateOnly, to DateOnly) decimal
         +GetRevenueByFlight(from DateOnly, to DateOnly) IReadOnlyList~RevenueLine~
         +GetRevenueBySeatClass(from DateOnly, to DateOnly) IReadOnlyList~RevenueLine~
+        -InRange(time DateTime, from DateOnly, to DateOnly)$ bool
+        -GetGroupName(booking Booking, byFlight bool)$ string
+        -BuildLines(byFlight bool, from DateOnly, to DateOnly) IReadOnlyList~RevenueLine~
     }
     class RevenueLine {
         -string label
@@ -47,70 +54,77 @@ classDiagram
         +GetNetRevenue() decimal
     }
     class Flight {
-        -DateTime departure
-        -string destination
         -string flightNumber
         -string origin
+        -string destination
+        -DateTime departure
         -List~Seat~ seats
+        +Flight(flightNumber string, origin string, destination string, departure DateTime)
         +AddSeat(seatCode string, seatClass ISeatClass, price decimal) void
-        +GetDeparture() DateTime
-        +GetDestination() string
         +GetFlightNumber() string
         +GetOrigin() string
-        +GetSeat(code string) Seat
+        +GetDestination() string
+        +GetDeparture() DateTime
+        +GetSeat(code string) Seat?
         +GetSeats() IReadOnlyList~Seat~
-        +Reschedule(newDeparture DateTime) void
+        +Reschedule(newDeparture DateTime, now DateTime) void
         +UpdatePrice(seatClassName string, newPrice decimal) void
     }
     class Booking {
-        -DateTime bookedAt
         -string bookingId
-        -DateTime cancelledAt
         -Flight flight
-        -decimal paidAmount
-        -Passenger passenger
-        -decimal refundAmount
         -Seat seat
+        -Passenger passenger
+        -decimal paidAmount
         -BookingStatus status
+        -DateTime bookedAt
+        -decimal refundAmount
+        -DateTime? cancelledAt
+        -object sync
         -Booking(bookingId string, flight Flight, seat Seat, passenger Passenger, paidAmount decimal, bookedAt DateTime)
         +Create(flight Flight, seat Seat, passenger Passenger, now DateTime)$ Booking
         +Cancel(now DateTime) decimal
-        +GetBookedAt() DateTime
+        +PreviewCancellation(now DateTime) ValueTuple~decimal,decimal~
+        +TransferTo(currentPassenger Passenger, newPassenger Passenger) void
+        -CalculateCancellationQuote(now DateTime) ValueTuple~decimal,decimal~
         +GetBookingId() string
-        +GetCancelledAt() DateTime
         +GetFlight() Flight
-        +GetPaidAmount() decimal
-        +GetPassenger() Passenger
-        +GetRefundAmount() decimal
         +GetSeat() Seat
+        +GetPassenger() Passenger
+        +GetPaidAmount() decimal
         +GetStatus() BookingStatus
+        +GetBookedAt() DateTime
+        +GetRefundAmount() decimal
+        +GetCancelledAt() DateTime?
     }
     class Seat {
-        -Passenger holder
-        -decimal price
-        -ISeatClass seatClass
         -string seatCode
+        -ISeatClass seatClass
+        -decimal price
         -SeatStatus status
+        -Passenger? holder
         -object sync
         ~Seat(code string, seatClass ISeatClass, price decimal)
-        +ChangePrice(newPrice decimal) void
-        +Confirm(p Passenger) void
         +GetCode() string
-        +GetPrice() decimal
         +GetSeatClass() ISeatClass
+        +GetPrice() decimal
         +GetStatus() SeatStatus
         +IsAvailable() bool
-        +Release() void
-        +TryLock(p Passenger) bool
+        +TryLock(passenger Passenger) bool
+        +Confirm(passenger Passenger) void
+        ~Release(passenger Passenger) void
+        ~TransferTo(currentPassenger Passenger, newPassenger Passenger) void
+        ~ChangePrice(newPrice decimal) void
+        -IsHeldBy(passenger Passenger) bool
     }
     class Passenger {
-        -string email
-        -string fullName
         -string id
+        -string fullName
+        -string email
         +Passenger(id string, fullName string, email string)
-        +GetEmail() string
-        +GetFullName() string
         +GetId() string
+        +GetFullName() string
+        +GetEmail() string
     }
     class SeatStatus {
         <<enumeration>>
@@ -125,9 +139,9 @@ classDiagram
     }
     class ISeatClass {
         <<interface>>
-        +CalculatePrice(price decimal) decimal
-        +CancellationFeeRate(t TimeSpan) decimal
         +GetName() string
+        +CalculatePrice(price decimal) decimal
+        +CancellationFeeRate(timeLeft TimeSpan) decimal
     }
     class SeatClassBase {
         <<abstract>>
@@ -135,25 +149,43 @@ classDiagram
         #decimal priceMultiplier
         #IReadOnlyList~CancellationTier~ tiers
         #SeatClassBase(name string, priceMultiplier decimal, tiers IReadOnlyList~CancellationTier~)
-        +CalculatePrice(price decimal) decimal
-        +CancellationFeeRate(t TimeSpan) decimal
         +GetName() string
+        +CalculatePrice(price decimal) decimal
+        +CancellationFeeRate(timeLeft TimeSpan) decimal
     }
     class CancellationTier {
-        -decimal feeRate
         -TimeSpan minTimeBefore
+        -decimal feeRate
         +CancellationTier(minTimeBefore TimeSpan, feeRate decimal)
-        +GetFeeRate() decimal
         +GetMinTimeBefore() TimeSpan
+        +GetFeeRate() decimal
     }
-    class EconomyClass
-    class BusinessClass
-    class FirstClass
-    class PremiumEconomyClass
+    class EconomyClass {
+        +EconomyClass()
+    }
+    class PremiumEconomyClass {
+        +PremiumEconomyClass()
+    }
+    class BusinessClass {
+        +BusinessClass()
+    }
+    class FirstClass {
+        +FirstClass()
+    }
+    class SeatUnavailableException {
+        +SeatUnavailableException(seatCode string)
+    }
+    class InvalidBookingStateException {
+        +InvalidBookingStateException(message string)
+    }
+    class FlightNotFoundException {
+        +FlightNotFoundException(flightNumber string)
+    }
+    class Exception
 
     BookingService --> FlightCatalog
     RevenueReportService --> BookingService
-    RevenueReportService ..> RevenueLine
+    RevenueReportService ..> RevenueLine : tạo ra
     FlightCatalog "1" o-- "*" Flight
     BookingService "1" o-- "*" Booking
     Flight "1" *-- "1..*" Seat
@@ -167,12 +199,31 @@ classDiagram
 
     Seat --> ISeatClass
     ISeatClass <|.. SeatClassBase
-    SeatClassBase *-- CancellationTier
+    SeatClassBase "1" *-- "1..*" CancellationTier
     SeatClassBase <|-- EconomyClass
+    SeatClassBase <|-- PremiumEconomyClass
     SeatClassBase <|-- BusinessClass
     SeatClassBase <|-- FirstClass
-    SeatClassBase <|-- PremiumEconomyClass
+
+    Exception <|-- SeatUnavailableException
+    Exception <|-- InvalidBookingStateException
+    Exception <|-- FlightNotFoundException
+    BookingService ..> FlightNotFoundException : «throw»
+    Booking ..> SeatUnavailableException : «throw»
+    Booking ..> InvalidBookingStateException : «throw»
 ```
+
+## Thay đổi so với bản tuần 1 – 2
+
+| Class | Thay đổi ở tuần 3 |
+|---|---|
+| `Flight` | `Reschedule` nhận thêm `now`; `GetSeat` trả về `Seat?` |
+| `FlightCatalog` | Thêm `Remove(flight)` (chỉ xóa khi chưa có ghế nào được đặt); khóa `sync` cho mọi thao tác |
+| `Seat` | `Release`, `ChangePrice` là internal; `Release` và `TransferTo` nhận hành khách để kiểm tra đúng người giữ ghế |
+| `Booking` | Thêm `PreviewCancellation`, `TransferTo`; `GetCancelledAt()` trả về `DateTime?`; khóa `sync` |
+| `BookingService` | Thêm `Transfer` (chuyển vé cho hành khách khác) |
+| Hạng ghế | Dùng đủ 4 hạng: First, Business, Premium Economy, Economy |
+| Exception | Đưa 3 exception và quan hệ «throw» vào sơ đồ |
 
 ## Ký hiệu
 
@@ -182,7 +233,7 @@ classDiagram
 | `o--` | Aggregation | `FlightCatalog` quản lý `Flight`, `BookingService` quản lý `Booking` |
 | `-->` | Association | `Booking` tham chiếu `Flight` / `Seat` / `Passenger`; `Seat` giữ `Passenger` đang đặt |
 | `<\|..` | Realization | `SeatClassBase` cài đặt `ISeatClass` |
-| `<\|--` | Generalization | 4 hạng ghế kế thừa `SeatClassBase` |
-| `..>` | Dependency | dùng enum; `RevenueReportService` tạo `RevenueLine` |
+| `<\|--` | Generalization | 4 hạng ghế kế thừa `SeatClassBase`; 3 exception kế thừa `Exception` |
+| `..>` | Dependency | dùng enum; `RevenueReportService` tạo `RevenueLine`; ném exception |
 | `-` `+` `#` `~` | private / public / protected / internal | |
-| `$` | static | `Booking.Create` |
+| `$` | static | `Booking.Create`, các hàm phụ trong `RevenueReportService` |
