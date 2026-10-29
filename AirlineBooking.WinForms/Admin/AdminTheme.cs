@@ -131,6 +131,17 @@ public static class AdminTheme
     public static void Warn(IWin32Window owner, string message) =>
         MessageBox.Show(owner, message, "Thông báo", MessageBoxButtons.OK, MessageBoxIcon.Warning);
 
+    // Lỗi từ Core: bỏ phần " (Parameter 'xxx')" tiếng Anh mà .NET tự gắn vào ArgumentException
+    public static void Warn(IWin32Window owner, Exception error)
+    {
+        string message = error.Message;
+        if (error is ArgumentException { ParamName: string paramName })
+        {
+            message = message.Replace($" (Parameter '{paramName}')", "");
+        }
+        Warn(owner, message);
+    }
+
     private static void StyleFilledButton(Button button, Color back, Color hover, Color pressed)
     {
         button.FlatStyle = FlatStyle.Flat;

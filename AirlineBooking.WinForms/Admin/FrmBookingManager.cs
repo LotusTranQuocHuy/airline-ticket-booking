@@ -176,7 +176,7 @@ public partial class FrmBookingManager : Form
         catch (InvalidBookingStateException ex)
         {
             // Ví dụ: khách vừa tự hủy vé này bên màn hình Người dùng
-            AdminTheme.Warn(this, ex.Message);
+            AdminTheme.Warn(this, ex);
             LoadBookings();
         }
     }

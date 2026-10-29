@@ -372,7 +372,7 @@ namespace AirlineBooking.WinForms.Admin
             // btnBack
             // 
             btnBack.Anchor = AnchorStyles.Top | AnchorStyles.Right;
-            btnBack.Location = new Point(642, 0);
+            btnBack.Location = new Point(638, 0);
             btnBack.Name = "btnBack";
             btnBack.Size = new Size(80, 28);
             btnBack.TabIndex = 4;
@@ -391,7 +391,7 @@ namespace AirlineBooking.WinForms.Admin
             // btnEdit
             // 
             btnEdit.Anchor = AnchorStyles.Top | AnchorStyles.Right;
-            btnEdit.Location = new Point(474, 0);
+            btnEdit.Location = new Point(470, 0);
             btnEdit.Name = "btnEdit";
             btnEdit.Size = new Size(80, 28);
             btnEdit.TabIndex = 1;
@@ -401,7 +401,7 @@ namespace AirlineBooking.WinForms.Admin
             // btnDelete
             // 
             btnDelete.Anchor = AnchorStyles.Top | AnchorStyles.Right;
-            btnDelete.Location = new Point(562, 0);
+            btnDelete.Location = new Point(558, 0);
             btnDelete.Name = "btnDelete";
             btnDelete.Size = new Size(72, 28);
             btnDelete.TabIndex = 2;

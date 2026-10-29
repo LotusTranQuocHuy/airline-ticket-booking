@@ -106,7 +106,18 @@ public partial class FrmRevenueReport : Form
                 line.GetNetRevenue().ToString(CultureInfo.InvariantCulture)));
         }
 
-        File.WriteAllText(dialog.FileName, csv.ToString(), new UTF8Encoding(encoderShouldEmitUTF8Identifier: true));
+        try
+        {
+            File.WriteAllText(dialog.FileName, csv.ToString(), new UTF8Encoding(encoderShouldEmitUTF8Identifier: true));
+        }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+        {
+            // Ví dụ: file đang mở trong Excel, hoặc không có quyền ghi vào thư mục đã chọn
+            AdminTheme.Warn(this,
+                $"Không lưu được file: {ex.Message}{Environment.NewLine}Hãy đóng file nếu đang mở trong Excel rồi thử lại.");
+            return;
+        }
+
         MessageBox.Show(this, $"Đã lưu báo cáo vào {dialog.FileName}", "Xuất Excel",
             MessageBoxButtons.OK, MessageBoxIcon.Information);
     }

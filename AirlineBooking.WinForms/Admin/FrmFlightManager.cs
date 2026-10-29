@@ -112,7 +112,7 @@ public partial class FrmFlightManager : Form
         }
         catch (ArgumentException ex)       // ví dụ: trùng số hiệu chuyến
         {
-            AdminTheme.Warn(this, ex.Message);
+            AdminTheme.Warn(this, ex);
             return;
         }
 
@@ -175,7 +175,7 @@ public partial class FrmFlightManager : Form
             }
             catch (InvalidOperationException ex)   // chuyến đã có vé đặt
             {
-                AdminTheme.Warn(this, ex.Message);
+                AdminTheme.Warn(this, ex);
             }
             LoadFlights();
         }

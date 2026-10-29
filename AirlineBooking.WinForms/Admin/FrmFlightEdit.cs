@@ -130,12 +130,12 @@ public partial class FrmFlightEdit : Form
         }
         catch (ArgumentException ex)
         {
-            AdminTheme.Warn(this, ex.Message);
+            AdminTheme.Warn(this, ex);
             return;
         }
         catch (InvalidOperationException ex)
         {
-            AdminTheme.Warn(this, ex.Message);
+            AdminTheme.Warn(this, ex);
             return;
         }
 
