@@ -6,7 +6,7 @@
 | **Nhóm** | 2 thành viên: Trần Quốc Huy, Ngô Thành Đạt |
 | **Công nghệ** | C# / .NET 8 / Windows Forms / xUnit |
 | **Repository** | https://github.com/LotusTranQuocHuy/airline-ticket-booking |
-| **Phiên bản báo cáo** | Các link file trong báo cáo gắn với commit [`4cac3b5`](https://github.com/LotusTranQuocHuy/airline-ticket-booking/tree/4cac3b539bc998ede391bb11df41b6945e124490) |
+| **Phiên bản báo cáo** | Phần tuần 4 của Ngô Thành Đạt được cập nhật tại commit [`03e13e1`](https://github.com/LotusTranQuocHuy/airline-ticket-booking/commit/03e13e183444c58d8bd355f7456f1e032de1f75b); các phần trước vẫn dẫn chứng theo commit tương ứng. |
 
 > **Quy ước cho người điền:** các khung có nhãn **🟨 [ĐẠT ĐIỀN]** là phần của Ngô Thành Đạt. Link file nên dùng permalink gắn mã commit: mở file trên GitHub → chọn dòng → nhấn phím `y` → copy đường dẫn.
 
@@ -76,7 +76,7 @@ Ngoài yêu cầu của đề, nhóm làm thêm phần **Admin**: tạo / sửa 
 | 1 | Class diagram, kế hoạch 4 tuần (`9426395`, `87115ee`, `73a02d9`) | Khung code C# từ class diagram (`e020817`) |
 | 2 | 5 màn hình Admin, đồng bộ màu, sửa màn hình đăng nhập (`9b0aceb`) | Giao diện Người dùng, dữ liệu demo (`7b0f82a` … `5d6ddbd`) |
 | 3 | Core Admin, dữ liệu dùng chung, nối Admin vào Core (`ace53a0`, `a631efe`, `58325a5`, `094da9c`) | Core đặt / hủy vé, nối Người dùng vào Core, 5 test, chuyển vé (`7348164` … `5e4a090`) |
-| 4 | 4 test Admin, làm mượt giao diện, class diagram bản cuối (`c867637`, `40b90fc`) | 🟨 [ĐẠT ĐIỀN] test khứ hồi, test đa luồng, sửa giao diện — kèm mã commit |
+| 4 | 4 test Admin, làm mượt giao diện, class diagram bản cuối (`c867637`, `40b90fc`) | Test khứ hồi, test 50 thread đồng thời, chuẩn hóa nhãn/ngày giờ tiếng Việt, viết giải thích race condition (`611724a`, `03e13e1`) |
 
 Danh sách đầy đủ ở [Phụ lục](#phụ-lục-danh-sách-commit).
 
@@ -204,15 +204,14 @@ Mọi lỗi Core ném ra (`ArgumentException`, `InvalidOperationException`, `Inv
 
 ### 4.3. Chức năng Người dùng
 
-> 🟨 **[ĐẠT ĐIỀN]** — mỗi ý ghi: làm gì, ở class / method nào, link permalink tới đúng dòng code (commit `4cac3b5` hoặc commit mới hơn của bạn).
->
-> - **Khóa ghế** — `Seat.TryLock` / `Confirm` / `Release`: ghế đi qua các trạng thái Available → Locked → Booked thế nào; vì sao `Release` cần truyền hành khách (`IsHeldBy`).
-> - **Đặt vé** — `BookingService.Book` → `Booking.Create`: tìm chuyến (không có thì `FlightNotFoundException`), tìm ghế, khóa ghế, tính giá qua hạng ghế, xác nhận; nếu có lỗi giữa chừng thì `Release` ghế (khối `try / catch` trong `Create`).
-> - **Hủy vé và hoàn tiền** — `Booking.Cancel` / `PreviewCancellation` / `CalculateCancellationQuote`: kiểm tra trạng thái, tính thời gian còn lại, lấy tỉ lệ phí từ hạng ghế, làm tròn, trả ghế.
-> - **Tìm chuyến** — `FlightCatalog.Search(origin, destination, date)`.
-> - **Chuyển vé** — `BookingService.Transfer` → `Booking.TransferTo` → `Seat.TransferTo`.
-> - **Khứ hồi** — cách đặt vé khứ hồi hiện tại và test tương ứng.
-> - **Giao diện** — `FrmSearchFlight`, `FrmSeatMap`, `FrmBookingConfirm`, `FrmMyBookings`, `FrmTransferBooking` gọi vào Core qua `DemoData` (dùng `AppServices`).
+*Người viết: Ngô Thành Đạt*
+
+- **Khóa ghế và đặt vé** — `BookingService.Book` gọi `Booking.Create`; ghế được giữ nguyên tử qua `Seat.TryLock`, tính giá theo hạng, sau đó xác nhận. Nếu ghế đã có người, hệ thống ném `SeatUnavailableException` và không tạo vé thứ hai.
+- **Hủy vé và hoàn tiền** — `Booking.Cancel` kiểm tra trạng thái, tính mức phí theo hạng ghế và thời gian còn lại, lưu tiền hoàn rồi trả ghế. `PreviewCancellation` cho giao diện xem trước khoản phí và tiền hoàn.
+- **Khứ hồi** — test [`RoundTripSearchAndBook_CreatesOutboundAndReturnBookings`](https://github.com/LotusTranQuocHuy/airline-ticket-booking/blob/03e13e183444c58d8bd355f7456f1e032de1f75b/AirlineBooking.Core.Tests/BookingFlowTests.cs#L38-L78) xác nhận tìm được hai chuyến ngược chiều theo ngày tương ứng và đặt thành công một vé cho từng chặng. Hiện mỗi chặng là một vé riêng; giao diện vẫn chưa có bước chọn và đặt chuyến về.
+- **Kiểm thử đa luồng** — [`BookingService_RejectsConcurrentDuplicateSeatAndRepeatedCancellation`](https://github.com/LotusTranQuocHuy/airline-ticket-booking/blob/03e13e183444c58d8bd355f7456f1e032de1f75b/AirlineBooking.Core.Tests/BookingFlowTests.cs#L89-L131) khởi chạy 50 worker thread riêng cùng đặt ghế 12A: chỉ một vé được tạo, 49 yêu cầu nhận `SeatUnavailableException`.
+- **Hoàn thiện giao diện** — `UiKit.Label` và `UiKit.Button` loại bỏ khoảng trắng cuối nhãn; ngày giờ ở sơ đồ ghế và xác nhận vé định dạng theo `vi-VN`.
+- **Các màn hình** — `FrmSearchFlight`, `FrmSeatMap`, `FrmBookingConfirm`, `FrmMyBookings` và `FrmTransferBooking` dùng dữ liệu demo trong bộ nhớ để thực hiện các luồng phía Người dùng.
 
 ---
 
@@ -220,12 +219,13 @@ Mọi lỗi Core ném ra (`ArgumentException`, `InvalidOperationException`, `Inv
 
 ### 5.1. Đặt trùng ghế (check-then-act)
 
-> 🟨 **[ĐẠT ĐIỀN]** — gợi ý nội dung:
->
-> - **Vấn đề:** nếu "kiểm tra ghế còn trống" và "đánh dấu ghế đã giữ" là hai bước tách rời, hai hành khách bấm đặt cùng lúc có thể cùng thấy ghế trống và cùng đặt được (check-then-act). Vẽ trình tự hai luồng xen kẽ để minh họa.
-> - **Cách nhóm xử lý:** [`Seat.TryLock`](https://github.com/LotusTranQuocHuy/airline-ticket-booking/blob/4cac3b539bc998ede391bb11df41b6945e124490/AirlineBooking.Core/Seat.cs#L52-L66) gộp kiểm tra và đổi trạng thái vào **một khối `lock (_sync)`**: luồng thứ hai phải chờ, và khi vào được thì ghế đã là Locked → trả về `false` → `Booking.Create` ném `SeatUnavailableException`.
-> - **Vì sao khóa theo từng ghế** (mỗi `Seat` có `_sync` riêng) mà không khóa cả hệ thống: hai người đặt hai ghế khác nhau không phải chờ nhau.
-> - **Minh chứng:** test đặt đồng thời trong `BookingFlowTests` (và test nhiều luồng ở tuần 4) — chỉ đúng một người thành công.
+*Người viết: Ngô Thành Đạt*
+
+Race condition có thể xảy ra nếu chương trình tách việc kiểm tra `Available` khỏi thao tác giữ ghế. Hai luồng có thể cùng đọc ghế trống trước khi một trong hai cập nhật trạng thái, khiến cùng một ghế bị bán hai lần.
+
+`Seat.TryLock` kiểm tra trạng thái và chuyển `Available` sang `Locked` bên trong cùng `lock (_sync)`. Luồng tiếp theo chỉ chạy sau khi khóa được nhả; lúc đó ghế đã bị giữ nên yêu cầu thất bại. `Booking.Create` báo lỗi bằng `SeatUnavailableException`. Khóa nằm trên từng đối tượng `Seat`, do đó các yêu cầu đặt hai ghế khác nhau không phải chờ chung một khóa.
+
+Kiểm thử [`BookingService_RejectsConcurrentDuplicateSeatAndRepeatedCancellation`](https://github.com/LotusTranQuocHuy/airline-ticket-booking/blob/03e13e183444c58d8bd355f7456f1e032de1f75b/AirlineBooking.Core.Tests/BookingFlowTests.cs#L89-L131) khởi chạy 50 worker thread riêng, đồng bộ tại cổng bắt đầu rồi cùng đặt ghế `12A`; kết quả là một vé được tạo và 49 yêu cầu bị từ chối. Đây là minh chứng kiểm thử cho việc khóa ghế tránh bán trùng.
 
 ### 5.2. Các chỗ khóa khác
 
@@ -242,9 +242,9 @@ Mọi lỗi Core ném ra (`ArgumentException`, `InvalidOperationException`, `Inv
 
 ### 6.1. Tổng hợp
 
-*Người viết: Trần Quốc Huy — 🟨 [ĐẠT ĐIỀN] bổ sung các test mới của tuần 4*
+*Người viết: Trần Quốc Huy; bổ sung test Người dùng tuần 4: Ngô Thành Đạt*
 
-Chạy bằng `dotnet test` hoặc Test Explorer trong Visual Studio. Kết quả tại commit `4cac3b5`: **9/9 test đạt**.
+Chạy bằng `dotnet test` hoặc Test Explorer trong Visual Studio. Sau khi bổ sung test khứ hồi, toàn bộ **10/10 test đạt**; build WinForms thành công, không có cảnh báo hay lỗi.
 
 | Loại test đề yêu cầu | Test | File |
 |---|---|---|
@@ -255,8 +255,8 @@ Chạy bằng `dotnet test` hoặc Test Explorer trong Visual Studio. Kết qu�
 | | `RevenueReport_SeparatesPaidAndRefundedAmounts` (cùng luồng đặt vé, Business trả × 2,5 so với Economy) | `AdminFeatureTests` |
 | Chức năng thêm | `TransferMovesBookingAndSeatOwnershipToTheRecipient`, `TransferRejectsCancelledBooking` | `BookingFlowTests` |
 | | `UpdatePrice_DoesNotChangeAlreadyBookedTicket` | `AdminFeatureTests` |
-| Khứ hồi | 🟨 [ĐẠT ĐIỀN] tên test + link | |
-| Đa luồng (bonus) | 🟨 [ĐẠT ĐIỀN] tên test + link | |
+| Khứ hồi | [`RoundTripSearchAndBook_CreatesOutboundAndReturnBookings`](https://github.com/LotusTranQuocHuy/airline-ticket-booking/blob/03e13e183444c58d8bd355f7456f1e032de1f75b/AirlineBooking.Core.Tests/BookingFlowTests.cs#L38-L78) | `BookingFlowTests` |
+| Đa luồng (bonus) | [`BookingService_RejectsConcurrentDuplicateSeatAndRepeatedCancellation`](https://github.com/LotusTranQuocHuy/airline-ticket-booking/blob/03e13e183444c58d8bd355f7456f1e032de1f75b/AirlineBooking.Core.Tests/BookingFlowTests.cs#L89-L131) — 50 worker thread cùng đặt ghế, đúng 1 thành công | `BookingFlowTests` |
 
 Mọi test dùng **đồng hồ giả** (`FrozenTimeProvider`) cố định ở 15/04/2030 08:00, nên kết quả không phụ thuộc giờ chạy.
 
@@ -277,7 +277,14 @@ Mọi test dùng **đồng hồ giả** (`FrozenTimeProvider`) cố định ở 
 
 ### 6.3. Test phía Người dùng — `BookingFlowTests.cs`
 
-> 🟨 **[ĐẠT ĐIỀN]** — bảng giống mục 6.2 (tên test + link dòng, tình huống, kiểm tra) cho các test: đặt – hủy – hoàn tiền, đặt trùng ghế đồng thời và hủy hai lần, hoàn tiền khác nhau theo hạng ghế, chuyển vé, từ chối chuyển vé đã hủy, **khứ hồi**, **đa luồng**.
+| Test | Tình huống | Kiểm tra |
+|---|---|---|
+| `SearchBookAndCancel_ReleasesSeatAndRefundsTheQuotedAmount` | Tìm chuyến, đặt ghế Economy, hủy vé | Giá, tiền hoàn, trạng thái vé và ghế |
+| `RoundTripSearchAndBook_CreatesOutboundAndReturnBookings` | Tìm chuyến đi và chuyến về ngược chiều ở ngày tương ứng | Có hai vé xác nhận, ghế của cả hai chặng đều được đặt |
+| `BookingService_RejectsConcurrentDuplicateSeatAndRepeatedCancellation` | 50 worker thread cùng đặt ghế 12A; sau đó thử hủy vé hai lần | Chỉ một yêu cầu thành công, 49 lỗi ghế không trống; hủy lần hai bị từ chối |
+| `CancellationWithin24Hours_RefundsDifferentAmountsBySeatClass` | Hủy Economy và Business tại cùng mốc giờ | Số tiền hoàn khác nhau theo quy tắc từng hạng |
+| `TransferMovesBookingAndSeatOwnershipToTheRecipient` | Chuyển vé sang hành khách khác rồi hủy | Chủ vé thay đổi, vé không còn thuộc người cũ, ghế được trả sau khi hủy |
+| `TransferRejectsCancelledBooking` | Chuyển vé đã bị hủy | Ném `InvalidBookingStateException`, người nhận không nhận được vé |
 
 ### 6.4. Kiểm thử thủ công cả luồng
 
@@ -301,10 +308,11 @@ Nhật ký chi tiết (prompt, nội dung AI tạo ra, phần nhóm tự sửa, 
 | Claude Code (Anthropic) | Claude Opus 5.5 | Trần Quốc Huy | Kế hoạch; kiểm tra class diagram; khung code C# (tuần 1); code giao diện Admin; hướng dẫn và sửa mẫu code Core phía Admin; gộp code và dữ liệu dùng chung; khung test Admin; tài liệu |
 | Claude Design (Anthropic) | — | Trần Quốc Huy | Bản thiết kế 5 màn hình Admin (tuần 2) |
 | GitHub Copilot | GPT-6-Luna | Ngô Thành Đạt | Giao diện Người dùng; Core đặt / hủy vé; kiểm thử tự động; chuyển vé |
+| Copilot SDK trong VS Code | Không hiển thị trong phiên | Ngô Thành Đạt | Tuần 4: test khứ hồi, kiểm thử 50 yêu cầu đồng thời, chuẩn hóa nhãn và ngày giờ, giải thích race condition |
 
 **Phần nhóm tự làm** (tóm tắt — chi tiết trong log):
 - **Trần Quốc Huy:** tự vẽ và sửa class diagram qua nhiều vòng; tự viết `Flight.Reschedule`, `UpdatePrice`, `FlightCatalog.Remove`, các hàm `RevenueReportService` sau khi được góp ý; tự viết `AppServices`; tự nối 5 form Admin vào Core theo hướng dẫn; tự viết 3 / 4 test Admin; tự quyết định các hướng: tông màu navy, không dùng database, chọn cách viết không dùng lambda; tự chạy thử toàn bộ luồng.
-- **Ngô Thành Đạt:** 🟨 [ĐẠT ĐIỀN]
+- **Ngô Thành Đạt:** tự chạy test và build; bổ sung test tìm/đặt hai chặng khứ hồi và kiểm thử đồng thời 50 yêu cầu; hoàn thiện nhãn và định dạng ngày giờ tiếng Việt; kiểm tra, ghi rõ giới hạn rằng giao diện khứ hồi hiện mới lưu ngày về, chưa thực hiện đặt chặng về.
 
 Quy ước: commit có nội dung do AI viết ghi `Co-Authored-By: Claude Opus 5.5` hoặc `Co-authored-by: Copilot` trong nội dung commit.
 
@@ -340,18 +348,18 @@ Hoặc mở `AirlineBooking.sln` bằng Visual Studio, chọn `AirlineBooking.Wi
 - Dữ liệu lưu trong bộ nhớ, tắt ứng dụng là mất. Vé mẫu nạp lúc mở ứng dụng nên đều có ngày đặt là hôm nay.
 - Chưa có nghiệp vụ **hãng hủy chuyến** đã có khách (hoàn 100% cho mọi vé, giữ lịch sử) — hiện chỉ xóa được chuyến chưa có vé.
 - Đăng nhập Admin không cần mật khẩu (theo phạm vi đề).
-- 🟨 [ĐẠT ĐIỀN]
+- Giao diện khứ hồi mới lưu và hiển thị ngày về; luồng tìm chuyến/chọn ghế/đặt vé trên WinForms mới thực hiện chặng đi. Test khứ hồi hiện kiểm tra nghiệp vụ Core bằng hai chuyến và hai vé riêng.
 
 **Hướng phát triển**
 - Lưu dữ liệu: thêm interface `IBookingRepository` với hai cách cài đặt (bộ nhớ cho test, cơ sở dữ liệu cho bản chạy thật) — Core không phải sửa nhờ phụ thuộc vào interface.
 - Hủy chuyến: thêm trạng thái chuyến bay (`Scheduled`, `Cancelled`) và `BookingService.CancelFlight`.
-- 🟨 [ĐẠT ĐIỀN]
+- Hoàn thiện luồng khứ hồi trên giao diện để hành khách có thể tìm, chọn ghế và đặt vé cho cả chặng đi lẫn chặng về.
 
 ---
 
 ## Phụ lục: danh sách commit
 
-*Người viết: Trần Quốc Huy — 🟨 [ĐẠT ĐIỀN] thêm commit tuần 4 của mình*
+*Người viết: Trần Quốc Huy và Ngô Thành Đạt*
 
 Ghi chú: một số commit của Ngô Thành Đạt hiển thị tên `SSGMOkitaSouji` (cùng email, khác tên cấu hình Git).
 
@@ -384,4 +392,5 @@ Ghi chú: một số commit của Ngô Thành Đạt hiển thị tên `SSGMOkit
 | 4 | [`d2efdea`](https://github.com/LotusTranQuocHuy/airline-ticket-booking/commit/d2efdea) | Huy | Document week 4 admin test AI usage |
 | 4 | [`40b90fc`](https://github.com/LotusTranQuocHuy/airline-ticket-booking/commit/40b90fc) | Huy | Vietnamese culture, friendly admin error messages, clipped buttons, final class diagram |
 | 4 | [`4cac3b5`](https://github.com/LotusTranQuocHuy/airline-ticket-booking/commit/4cac3b5) | Huy | Document week 4 admin polish and final class diagram AI usage |
-| 4 | 🟨 [ĐẠT ĐIỀN] | Đạt | |
+| 4 | [`611724a`](https://github.com/LotusTranQuocHuy/airline-ticket-booking/commit/611724a0c8fa4e4b7d32172289a94d85256524a1) | Đạt | Add week four concurrency coverage, round-trip test, UI polish and race-condition report |
+| 4 | [`03e13e1`](https://github.com/LotusTranQuocHuy/airline-ticket-booking/commit/03e13e183444c58d8bd355f7456f1e032de1f75b) | Đạt | Run seat contention test on dedicated threads |

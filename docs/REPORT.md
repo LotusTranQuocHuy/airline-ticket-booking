@@ -4,7 +4,7 @@
 
 ### Tình huống
 
-Giả sử 50 yêu cầu đồng thời cùng đặt ghế `12A` trên chuyến `VN205`. Nếu việc kiểm tra ghế còn trống và cập nhật trạng thái được thực hiện tách rời, nhiều yêu cầu có thể cùng đọc trạng thái `Available` trước khi yêu cầu đầu tiên cập nhật ghế. Kết quả là nhiều vé có thể được tạo cho cùng một ghế (race condition).
+Giả sử 50 luồng đồng thời cùng đặt ghế `12A` trên chuyến `VN205`. Nếu việc kiểm tra ghế còn trống và cập nhật trạng thái được thực hiện tách rời, nhiều luồng có thể cùng đọc trạng thái `Available` trước khi luồng đầu tiên cập nhật ghế. Kết quả là nhiều vé có thể được tạo cho cùng một ghế (race condition).
 
 ### Cách ngăn chặn
 
@@ -14,7 +14,7 @@ Khóa được đặt trên từng đối tượng ghế, vì thế các yêu c�
 
 ### Kiểm thử
 
-Kiểm thử `BookingService_RejectsConcurrentDuplicateSeatAndRepeatedCancellation` đồng bộ 50 yêu cầu trước khi cho cùng gọi đặt ghế `12A`. Kết quả mong đợi và được kiểm tra tự động:
+Kiểm thử `BookingService_RejectsConcurrentDuplicateSeatAndRepeatedCancellation` khởi chạy 50 worker thread riêng, đồng bộ tại cổng bắt đầu rồi cùng gọi đặt ghế `12A`. Kết quả mong đợi và được kiểm tra tự động:
 
 - 1 yêu cầu tạo được vé.
 - 49 yêu cầu còn lại bị từ chối do ghế đã được giữ.
@@ -26,7 +26,7 @@ Chạy kiểm thử bằng lệnh:
 dotnet test AirlineBooking.Core.Tests\AirlineBooking.Core.Tests.csproj
 ```
 
-Kết quả xác minh ngày 02/11/2026: 6 bài test đạt, không có bài test thất bại; project WinForms cũng build thành công, không có cảnh báo hay lỗi.
+Kết quả xác minh ngày 02/11/2026 sau khi đồng bộ các thay đổi của nhóm: 10 bài test đạt, không có bài test thất bại; project WinForms cũng build thành công, không có cảnh báo hay lỗi.
 
 ### Phạm vi kiểm thử khứ hồi
 
