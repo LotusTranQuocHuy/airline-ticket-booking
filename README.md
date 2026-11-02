@@ -72,4 +72,4 @@ Kế hoạch chi tiết: [docs/PLAN.md](docs/PLAN.md)
 
 Nhật ký sử dụng AI: [docs/AI_USAGE_LOG.md](docs/AI_USAGE_LOG.md)
 
-Báo cáo dự án: [docs/REPORT.md](docs/REPORT.md)
+Báo cáo cuối kỳ: [docs/FINAL_REPORT.md](docs/FINAL_REPORT.md)

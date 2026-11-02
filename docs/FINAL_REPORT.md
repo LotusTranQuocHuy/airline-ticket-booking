@@ -8,8 +8,6 @@
 | **Repository** | https://github.com/LotusTranQuocHuy/airline-ticket-booking |
 | **Phiên bản báo cáo** | Phần tuần 4 của Ngô Thành Đạt được cập nhật tại commit [`03e13e1`](https://github.com/LotusTranQuocHuy/airline-ticket-booking/commit/03e13e183444c58d8bd355f7456f1e032de1f75b); các phần trước vẫn dẫn chứng theo commit tương ứng. |
 
-> **Quy ước cho người điền:** các khung có nhãn **🟨 [ĐẠT ĐIỀN]** là phần của Ngô Thành Đạt. Link file nên dùng permalink gắn mã commit: mở file trên GitHub → chọn dòng → nhấn phím `y` → copy đường dẫn.
-
 ## Mục lục
 
 1. [Tóm tắt đề bài](#1-tóm-tắt-đề-bài)
@@ -53,7 +51,7 @@ Ngoài yêu cầu của đề, nhóm làm thêm phần **Admin**: tạo / sửa 
 
 ## 2. Phân công và tiến trình
 
-*Người viết: Trần Quốc Huy — 🟨 [ĐẠT ĐIỀN] kiểm tra lại phần của mình*
+*Người viết: Trần Quốc Huy, Ngô Thành Đạt*
 
 **Phân công**
 
@@ -299,7 +297,7 @@ Mọi test dùng **đồng hồ giả** (`FrozenTimeProvider`) cố định ở 
 
 ## 7. AI Usage Log
 
-*Người viết: Trần Quốc Huy — 🟨 [ĐẠT ĐIỀN] kiểm tra dòng của mình*
+*Người viết: Trần Quốc Huy, Ngô Thành Đạt*
 
 Nhật ký chi tiết (prompt, nội dung AI tạo ra, phần nhóm tự sửa, commit): [docs/AI_USAGE_LOG.md](https://github.com/LotusTranQuocHuy/airline-ticket-booking/blob/4cac3b539bc998ede391bb11df41b6945e124490/docs/AI_USAGE_LOG.md)
 
@@ -342,7 +340,7 @@ Hoặc mở `AirlineBooking.sln` bằng Visual Studio, chọn `AirlineBooking.Wi
 
 ## 9. Giới hạn và hướng phát triển
 
-*Người viết: Trần Quốc Huy — 🟨 [ĐẠT ĐIỀN] bổ sung phía Người dùng*
+*Người viết: Trần Quốc Huy, Ngô Thành Đạt*
 
 **Giới hạn hiện tại**
 - Dữ liệu lưu trong bộ nhớ, tắt ứng dụng là mất. Vé mẫu nạp lúc mở ứng dụng nên đều có ngày đặt là hôm nay.
