@@ -1,4 +1,5 @@
 using AirlineBooking.Core;
+using System.Globalization;
 
 namespace AirlineBooking.WinForms;
 
@@ -23,7 +24,9 @@ internal sealed class FrmSeatMap : Form
         var header = UiKit.Header(
             "CHỌN GHẾ",
             $"{flight.Number}  ·  {flight.Origin} → {flight.Destination}",
-            flight.Departure.ToString("dddd, dd MMMM yyyy · HH:mm"));
+            flight.Departure.ToString(
+                "dddd, dd MMMM yyyy · HH:mm",
+                CultureInfo.GetCultureInfo("vi-VN")));
 
         var content = new Panel
         {

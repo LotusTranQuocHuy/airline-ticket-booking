@@ -35,19 +35,76 @@ public sealed class BookingFlowTests
     }
 
     [Fact]
+    public void RoundTripSearchAndBook_CreatesOutboundAndReturnBookings()
+    {
+        var now = new DateTime(2030, 4, 15, 8, 0, 0, DateTimeKind.Utc);
+        var outboundDeparture = now.AddDays(5);
+        var returnDeparture = now.AddDays(8);
+        var outboundFlight = new Flight(
+            "VN205",
+            "Ho Chi Minh City",
+            "Ha Noi",
+            outboundDeparture);
+        var returnFlight = new Flight(
+            "VN206",
+            "Ha Noi",
+            "Ho Chi Minh City",
+            returnDeparture);
+        var catalog = new FlightCatalog();
+        catalog.Add(outboundFlight);
+        catalog.Add(returnFlight);
+        var service = new BookingService(catalog, new FrozenTimeProvider(now));
+        AddSeat(outboundFlight, "12A", new EconomyClass());
+        AddSeat(returnFlight, "12A", new EconomyClass());
+        var passenger = new Passenger("round-trip-passenger", "Nguyen Van A", string.Empty);
+
+        var outboundMatches = catalog.Search(
+            "Ho Chi Minh City",
+            "Ha Noi",
+            DateOnly.FromDateTime(outboundDeparture)).ToArray();
+        var returnMatches = catalog.Search(
+            "Ha Noi",
+            "Ho Chi Minh City",
+            DateOnly.FromDateTime(returnDeparture)).ToArray();
+
+        Assert.Equal(outboundFlight, Assert.Single(outboundMatches));
+        Assert.Equal(returnFlight, Assert.Single(returnMatches));
+
+        var outboundBooking = service.Book("VN205", "12A", passenger);
+        var returnBooking = service.Book("VN206", "12A", passenger);
+
+        Assert.Equal(BookingStatus.Confirmed, outboundBooking.GetStatus());
+        Assert.Equal(BookingStatus.Confirmed, returnBooking.GetStatus());
+        Assert.Equal(
+            new[] { "VN205", "VN206" },
+            service.GetBookingsByPassenger(passenger.GetId())
+                .Select(booking => booking.GetFlight().GetFlightNumber())
+                .OrderBy(flightNumber => flightNumber)
+                .ToArray());
+        Assert.Equal(SeatStatus.Booked, outboundFlight.GetSeat("12A")!.GetStatus());
+        Assert.Equal(SeatStatus.Booked, returnFlight.GetSeat("12A")!.GetStatus());
+    }
+
+    [Fact]
     public async Task BookingService_RejectsConcurrentDuplicateSeatAndRepeatedCancellation()
     {
+        const int concurrency = 50;
         var now = new DateTime(2030, 4, 15, 8, 0, 0, DateTimeKind.Utc);
         var (_, flight, service) = CreateBookingSystem(now, now.AddHours(72));
         AddSeat(flight, "12A", new EconomyClass());
-        var passengers = new[]
+        var passengers = Enumerable.Range(1, concurrency)
+            .Select(index => new Passenger(
+                $"passenger-{index}",
+                $"Passenger {index}",
+                string.Empty))
+            .ToArray();
+        using var ready = new CountdownEvent(concurrency);
+        var start = new TaskCompletionSource<bool>(
+            TaskCreationOptions.RunContinuationsAsynchronously);
+        var bookingAttempts = passengers.Select(async passenger =>
         {
-            new Passenger("passenger-1", "Nguyen Van A", string.Empty),
-            new Passenger("passenger-2", "Tran Thi B", string.Empty)
-        };
-        var attempts = await Task.WhenAll(passengers.Select(async passenger =>
-        {
-            await Task.Yield();
+            ready.Signal();
+            await start.Task;
             try
             {
                 return service.Book("VN205", "12A", passenger);
@@ -56,9 +113,15 @@ public sealed class BookingFlowTests
             {
                 return null;
             }
-        }));
+        }).ToArray();
+
+        Assert.True(ready.Wait(TimeSpan.FromSeconds(5)));
+        start.SetResult(true);
+        var attempts = await Task.WhenAll(bookingAttempts);
 
         var booking = Assert.Single(attempts.OfType<Booking>());
+        Assert.Equal(concurrency - 1, attempts.Count(attempt => attempt is null));
+        Assert.Single(service.GetBookings());
         Assert.Equal(SeatStatus.Booked, flight.GetSeat("12A")!.GetStatus());
 
         service.Cancel(booking.GetBookingId());

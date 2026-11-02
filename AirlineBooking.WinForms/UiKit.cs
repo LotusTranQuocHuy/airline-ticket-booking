@@ -30,7 +30,7 @@ internal static class UiKit
     {
         return new Label
         {
-            Text = text,
+            Text = text.TrimEnd(),
             AutoSize = true,
             Font = new Font("Segoe UI", size, bold ? FontStyle.Bold : FontStyle.Regular),
             ForeColor = color ?? Navy,
@@ -49,7 +49,7 @@ internal static class UiKit
     {
         var button = new Button
         {
-            Text = text,
+            Text = text.TrimEnd(),
             Height = height,
             AutoSize = false,
             FlatStyle = FlatStyle.Flat,

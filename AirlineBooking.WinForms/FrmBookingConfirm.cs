@@ -1,4 +1,5 @@
 using AirlineBooking.Core;
+using System.Globalization;
 
 namespace AirlineBooking.WinForms;
 
@@ -33,7 +34,13 @@ internal sealed class FrmBookingConfirm : Form
         card.Padding = new Padding(32);
         card.Controls.Add(UiKit.At("CHI TIẾT CHUYẾN BAY", 32, 28, 9, true, UiKit.Blue));
         card.Controls.Add(UiKit.At($"{flight.Origin}  →  {flight.Destination}", 32, 64, 20, true));
-        card.Controls.Add(UiKit.At($"{flight.Number}  ·  {flight.Departure:dddd, dd MMM yyyy · HH:mm}", 34, 106, 10, false, UiKit.Muted));
+        card.Controls.Add(UiKit.At(
+            $"{flight.Number}  ·  {flight.Departure.ToString("dddd, dd MMM yyyy · HH:mm", CultureInfo.GetCultureInfo("vi-VN"))}",
+            34,
+            106,
+            10,
+            false,
+            UiKit.Muted));
         card.Controls.Add(UiKit.At("Hành khách", 34, 166, 9, false, UiKit.Muted));
         card.Controls.Add(UiKit.At(passenger.GetFullName(), 34, 188, 11, true));
         card.Controls.Add(UiKit.At("Ghế", 34, 232, 9, false, UiKit.Muted));

@@ -27,6 +27,7 @@ AirlineBooking.WinForms/
 └── Admin/                FrmAdminMain, FrmFlightManager, FrmFlightEdit, FrmBookingManager, FrmRevenueReport,
                           AdminTheme, AdminDisplay, Controls/ (CardPanel, MenuCard, BarChart, SeatLabel)
 docs/                     Class diagram (ảnh + file Enterprise Architect), kế hoạch thực hiện, AI Usage Log
+                          Báo cáo dự án
 AirlineBooking.Core.Tests/ Kiểm thử tự động luồng đặt vé
 ```
 
@@ -70,3 +71,5 @@ Hoặc mở `AirlineBooking.sln` bằng Visual Studio, chọn `AirlineBooking.Wi
 Kế hoạch chi tiết: [docs/PLAN.md](docs/PLAN.md)
 
 Nhật ký sử dụng AI: [docs/AI_USAGE_LOG.md](docs/AI_USAGE_LOG.md)
+
+Báo cáo dự án: [docs/REPORT.md](docs/REPORT.md)
