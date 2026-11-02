@@ -99,12 +99,11 @@ public sealed class BookingFlowTests
                 string.Empty))
             .ToArray();
         using var ready = new CountdownEvent(concurrency);
-        var start = new TaskCompletionSource<bool>(
-            TaskCreationOptions.RunContinuationsAsynchronously);
-        var bookingAttempts = passengers.Select(async passenger =>
+        using var start = new ManualResetEventSlim();
+        var bookingAttempts = passengers.Select(passenger => Task.Factory.StartNew(() =>
         {
             ready.Signal();
-            await start.Task;
+            start.Wait();
             try
             {
                 return service.Book("VN205", "12A", passenger);
@@ -113,10 +112,10 @@ public sealed class BookingFlowTests
             {
                 return null;
             }
-        }).ToArray();
+        }, CancellationToken.None, TaskCreationOptions.LongRunning, TaskScheduler.Default)).ToArray();
 
         Assert.True(ready.Wait(TimeSpan.FromSeconds(5)));
-        start.SetResult(true);
+        start.Set();
         var attempts = await Task.WhenAll(bookingAttempts);
 
         var booking = Assert.Single(attempts.OfType<Booking>());
