@@ -112,7 +112,7 @@ Ghi lại mọi lần nhóm dùng AI: ai dùng, hỏi gì, AI tạo ra gì, nhó
 
 | Mục | Nội dung |
 |---|---|
-| Công cụ AI | Copilot SDK trong VS Code; model không được cung cấp trong phiên làm việc. |
+| Công cụ AI | **GitHub Copilot** (Copilot SDK trong VS Code), model GPT-6-Luna. |
 | Prompt | Gửi ảnh danh sách công việc tuần 4: bổ sung test khứ hồi; tăng test đặt cùng ghế lên 50 luồng đồng thời; sửa khoảng trắng nhãn và ngôn ngữ ngày giờ; viết phần race condition trong báo cáo. |
 | AI tạo ra | Test tìm và đặt hai chặng khứ hồi ở tầng nghiệp vụ; test đồng thời 50 yêu cầu cùng đặt ghế; chuẩn hóa khoảng trắng cuối ở nhãn/nút và hiển thị thứ/ngày tiếng Việt; phần báo cáo giải thích race condition và cách đồng bộ ghế. |
 | Nhóm sửa / quyết định | Giữ mô hình mỗi chặng là một vé riêng. Ghi rõ giao diện hiện chưa có luồng chọn và đặt chặng về để không nhầm test tầng Core với chức năng giao diện đã hoàn thiện. |

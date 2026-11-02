@@ -306,7 +306,7 @@ Nhật ký chi tiết (prompt, nội dung AI tạo ra, phần nhóm tự sửa, 
 | Claude Code (Anthropic) | Claude Opus 5.5 | Trần Quốc Huy | Kế hoạch; kiểm tra class diagram; khung code C# (tuần 1); code giao diện Admin; hướng dẫn và sửa mẫu code Core phía Admin; gộp code và dữ liệu dùng chung; khung test Admin; tài liệu |
 | Claude Design (Anthropic) | — | Trần Quốc Huy | Bản thiết kế 5 màn hình Admin (tuần 2) |
 | GitHub Copilot | GPT-6-Luna | Ngô Thành Đạt | Giao diện Người dùng; Core đặt / hủy vé; kiểm thử tự động; chuyển vé |
-| Copilot SDK trong VS Code | Không hiển thị trong phiên | Ngô Thành Đạt | Tuần 4: test khứ hồi, kiểm thử 50 yêu cầu đồng thời, chuẩn hóa nhãn và ngày giờ, giải thích race condition |
+| GitHub Copilot (Copilot SDK trong VS Code) | GPT-6-Luna | Ngô Thành Đạt | Tuần 4: test khứ hồi, kiểm thử 50 luồng đồng thời, chuẩn hóa nhãn và ngày giờ, giải thích race condition |
 
 **Phần nhóm tự làm** (tóm tắt — chi tiết trong log):
 - **Trần Quốc Huy:** tự vẽ và sửa class diagram qua nhiều vòng; tự viết `Flight.Reschedule`, `UpdatePrice`, `FlightCatalog.Remove`, các hàm `RevenueReportService` sau khi được góp ý; tự viết `AppServices`; tự nối 5 form Admin vào Core theo hướng dẫn; tự viết 3 / 4 test Admin; tự quyết định các hướng: tông màu navy, không dùng database, chọn cách viết không dùng lambda; tự chạy thử toàn bộ luồng.
